@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
   const [logData, setLogData] = useState({ email: "", password: "", event_name: "Reverse Coding" });
@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const addData = (e) => {
     setLogData({ ...logData, [e.target.name]: e.target.value });
@@ -26,29 +27,19 @@ const LoginPage = () => {
     navigate("/register");
   };
 
-
   const logUser = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/users/login", {
+      await login({
         username: logData.email,
         password: logData.password,
         team_login: teamLogin,
         team_name: teamLogin ? teamName : undefined,
         event_name: logData.event_name,
-      }, {
-        withCredentials: true,
       });
-
-      // Store token and user data
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      
-      // Dispatch a custom event to notify other components about the login
-      window.dispatchEvent(new Event("storage"));
       
       // Navigate to instructions page
       navigate("/instructions");

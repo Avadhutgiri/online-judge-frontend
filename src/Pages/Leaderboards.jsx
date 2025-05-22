@@ -27,7 +27,7 @@ const Leaderboard = () => {
     const fetchLeaderboard = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/leaderboard`, {
+        const response = await axios.get(`https://onlinejudge.duckdns.org/api/leaderboard`, {
           params: { event_name: eventName, is_junior: isJunior },
           withCredentials: true,
         });

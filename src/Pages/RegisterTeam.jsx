@@ -35,7 +35,7 @@ const RegisterTeam = () => {
     setIsLoading(true);
 
     try {
-      await axios.post("http://localhost:5000/api/users/registerTeam", teamData);
+      await axios.post("https://onlinejudge.duckdns.org/api/users/registerTeam", teamData);
 
       setSuccess("Team registered successfully! Redirecting to login...");
       setTimeout(() => navigate("/"), 2000);

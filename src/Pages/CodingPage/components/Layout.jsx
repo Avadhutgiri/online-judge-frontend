@@ -57,7 +57,7 @@ const Layout = () => {
   // Fetch the problem details
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/api/problems/${id}`, {
+      .get(`https://onlinejudge.duckdns.org/api/problems/${id}`, {
         withCredentials: true,
       })
       .then((response) => {
@@ -99,7 +99,7 @@ const Layout = () => {
   const fetchSubmissionHistory = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/submissions/history/${id}`,
+        `https://onlinejudge.duckdns.org/api/submissions/history/${id}`,
         {
           withCredentials: true,
         }
@@ -126,7 +126,7 @@ const Layout = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/submissions/run",
+        "https://onlinejudge.duckdns.org/api/submissions/run",
         formData,
         {
           withCredentials: true,
@@ -167,7 +167,7 @@ const Layout = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/submissions/submit",
+        "https://onlinejudge.duckdns.org/api/submissions/submit",
         submissionData,
         {
           withCredentials: true,
@@ -201,7 +201,7 @@ const Layout = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/submissions/runSystem",
+        "https://onlinejudge.duckdns.org/api/submissions/runSystem",
         formData,
         {
           withCredentials: true,
@@ -237,7 +237,7 @@ const Layout = () => {
   ) => {
     try {
       let response = await axios.get(
-        `http://localhost:5000/polling/${submission_id}`,
+        `https://onlinejudge.duckdns.org/polling/${submission_id}`,
         {
           withCredentials: true,
         }

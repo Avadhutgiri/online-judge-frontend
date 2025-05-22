@@ -18,17 +18,6 @@ const ResultPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Retrieve event_name and category from cookies
-  // console.log('Cookies:', Cookies.get());
-  // const eventName = Cookies.get('event_name');
-  // const category = Cookies.get('category');
-
-  // Log event_name and category to the console
-  // useEffect(() => {
-  //   // console.log('Event Name:', eventName);
-  //   // console.log('Category:', category);
-  // }, [eventName, category]);
-
   // Theme colors
   const THEME = {
     primary: '#86C232',
@@ -44,7 +33,7 @@ const ResultPage = () => {
     const fetchResult = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5000/result`, {
+        const response = await axios.get(`https://onlinejudge.duckdns.org/result`, {
           withCredentials: true,
         });
 

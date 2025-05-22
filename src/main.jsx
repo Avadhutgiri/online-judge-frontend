@@ -11,7 +11,7 @@ import Leaderboards from '../src/Pages/Leaderboards.jsx';
 import ResultPage from './Pages/ResultPage.jsx';
 import RegisterPage from './Pages/RegisterPage.jsx';
 import RegisterTeam from './Pages/RegisterTeam.jsx';
-
+import { AuthProvider } from './context/AuthContext';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -29,6 +29,9 @@ const router = createBrowserRouter(
 );
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <RouterProvider router={router} />
-    
-)
+  <React.StrictMode>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  </React.StrictMode>
+);

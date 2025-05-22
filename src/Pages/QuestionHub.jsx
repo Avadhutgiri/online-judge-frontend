@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../utils/axios";
 
 const QuestionHub = () => {
   const navigate = useNavigate();
@@ -20,27 +20,17 @@ const QuestionHub = () => {
   };
 
   useEffect(() => {
-    // Retrieve user info from localStorage
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
-      navigate("/"); // Redirect to login if user is not found
-      return;
-    }
-
     // Fetch questions from the backend
     const fetchQuestions = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/problems", {
-          withCredentials: true,
-        });
-        
+        const response = await axiosInstance.get("/api/problems");
+
         // Fetch stats for each problem
         const questionsWithStats = await Promise.all(
           response.data.map(async (question) => {
             try {
-              const statsResponse = await axios.get(
-                `http://localhost:5000/api/problems/stats/${question.id}`,
-                { withCredentials: true }
+              const statsResponse = await axiosInstance.get(
+                `/api/problems/stats/${question.id}`
               );
               
               // Merge stats with question data
@@ -68,6 +58,7 @@ const QuestionHub = () => {
         setQuestions(questionsWithStats);
         setLoading(false);
       } catch (err) {
+        console.error("Error fetching questions:", err);
         setError(err.message || "Failed to load questions");
         setQuestions([]);
         setLoading(false);

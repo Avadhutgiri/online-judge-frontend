@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom';
@@ -11,7 +11,23 @@ import Leaderboards from '../src/Pages/Leaderboards.jsx';
 import ResultPage from './Pages/ResultPage.jsx';
 import RegisterPage from './Pages/RegisterPage.jsx';
 import RegisterTeam from './Pages/RegisterTeam.jsx';
-import { AuthProvider } from './context/AuthContext';
+import useAuthStore from './store/authStore';
+
+// Create a wrapper component to handle auth check
+const AppWrapper = () => {
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
+  useEffect(() => {
+    if (isLoading) {
+      checkAuth();
+    }
+  }, [checkAuth, isLoading]);
+
+  return (
+    <RouterProvider router={router} />
+  );
+};
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -29,9 +45,5 @@ const router = createBrowserRouter(
 );
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
-  </React.StrictMode>
+  <AppWrapper />
 );

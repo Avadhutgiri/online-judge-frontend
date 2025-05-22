@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Cookies from 'js-cookie'; // Import js-cookie
+import axiosInstance from '../utils/axios';
+import useAuthStore from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
 import image from "../Pages/pageassets/image.png";
 
 // Custom Result Card component with improved styling
@@ -17,6 +18,9 @@ const ResultPage = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const navigate = useNavigate();
 
   // Theme colors
   const THEME = {
@@ -30,13 +34,19 @@ const ResultPage = () => {
   };
 
   useEffect(() => {
+    if (isLoading) {
+      return; // Wait for auth check to complete
+    }
+
+    if (!isLoggedIn) {
+      navigate('/');
+      return;
+    }
+
     const fetchResult = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`https://onlinejudge.duckdns.org/result`, {
-          withCredentials: true,
-        });
-
+        const response = await axiosInstance.get(`/result`);
         setResult(response.data.team);
         setLoading(false);
       } catch (err) {
@@ -46,7 +56,7 @@ const ResultPage = () => {
     };
 
     fetchResult();
-  }, []);
+  }, [isLoggedIn, isLoading, navigate]);
 
   if (loading) {
     return (

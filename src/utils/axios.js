@@ -1,4 +1,5 @@
 import axios from 'axios';
+import useAuthStore from '../store/authStore';
 
 const axiosInstance = axios.create({
     baseURL: 'https://onlinejudge.duckdns.org',
@@ -25,8 +26,11 @@ axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401 || error.response?.status === 403) {
-            // Redirect to login page on authentication errors
-            window.location.href = '/';
+            // Only redirect if not already on login page
+            if (!window.location.pathname.includes('/login') && !window.location.pathname === '/') {
+                useAuthStore.getState().logout();
+                window.location.href = '/';
+            }
         }
         return Promise.reject(error);
     }

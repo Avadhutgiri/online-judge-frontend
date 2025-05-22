@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import axiosInstance from "../utils/axios";
+import useAuthStore from "../store/authStore";
 
 const LoginPage = () => {
   const [logData, setLogData] = useState({ email: "", password: "", event_name: "Reverse Coding" });
@@ -8,9 +9,9 @@ const LoginPage = () => {
   const [teamName, setTeamName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const login = useAuthStore((state) => state.login);
 
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const addData = (e) => {
     setLogData({ ...logData, [e.target.name]: e.target.value });
@@ -33,17 +34,25 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      await login({
+      const response = await axiosInstance.post("/api/users/login", {
         username: logData.email,
         password: logData.password,
         team_login: teamLogin,
         team_name: teamLogin ? teamName : undefined,
         event_name: logData.event_name,
+      }, {
+        withCredentials: true
       });
-      
-      // Navigate to instructions page
-      navigate("/instructions");
+
+      if (response.status === 200) {
+        login(response.data.user); // Store user data
+        // Wait a bit to ensure cookie is set
+        setTimeout(() => {
+          navigate("/instructions");
+        }, 100);
+      }
     } catch (err) {
+      console.error("Login error:", err);
       setError(err.response?.data?.error || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);

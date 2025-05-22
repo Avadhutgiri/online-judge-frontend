@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axios";
+import useAuthStore from "../store/authStore";
 
 const QuestionHub = () => {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isLoading = useAuthStore((state) => state.isLoading);
 
   // Theme colors
   const THEME = {
@@ -20,10 +23,23 @@ const QuestionHub = () => {
   };
 
   useEffect(() => {
+    if (isLoading) {
+      return; // Wait for auth check to complete
+    }
+
+    if (!isLoggedIn) {
+      navigate('/');
+      return;
+    }
+
     // Fetch questions from the backend
     const fetchQuestions = async () => {
+      console.log("Fetching questions...");
       try {
         const response = await axiosInstance.get("/api/problems");
+        // Log the response data
+        console.log("Response data:");
+        console.log(response.data);
 
         // Fetch stats for each problem
         const questionsWithStats = await Promise.all(
@@ -66,7 +82,7 @@ const QuestionHub = () => {
     };
 
     fetchQuestions();
-  }, [navigate]);
+  }, [navigate, isLoggedIn, isLoading]);
 
   const handleQuestionClick = (id) => {
     navigate(`/coding/problem/${id}`);

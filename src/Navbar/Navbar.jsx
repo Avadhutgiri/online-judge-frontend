@@ -2,28 +2,15 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
 import Modal from "../components/Modal";
-import { useAuth } from '../context/AuthContext';
+import useAuthStore from "../store/authStore";
+import axiosInstance from "../utils/axios";
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { isAuthenticated, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
-
-    // Listen for login/logout changes using storage event
-    useEffect(() => {
-        const handleStorageChange = () => {
-            setIsAuthenticated(!!localStorage.getItem("token"));
-        };
-
-        // Listen for storage changes
-        window.addEventListener("storage", handleStorageChange);
-
-        return () => {
-            window.removeEventListener("storage", handleStorageChange);
-        };
-    }, []);
+    const { isLoggedIn, logout } = useAuthStore();
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -42,11 +29,16 @@ const Navbar = () => {
     };
 
     const handleAuthAction = async () => {
-        if (isAuthenticated) {
-            await logout();
-            navigate('/');
+        if (isLoggedIn) {
+            try {
+                await axiosInstance.get('/api/users/logout');
+                logout();
+                navigate("/");
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
         } else {
-            navigate('/');
+            navigate("/");
         }
     };
 
@@ -113,7 +105,7 @@ const Navbar = () => {
                         onClick={handleAuthAction}
                         className="h-10 px-6 flex items-center justify-center gap-2 bg-[#86C232] hover:bg-[#76b129] rounded-[30px] text-[#191919] font-bold transition duration-200"
                     >
-                        {isAuthenticated ? (
+                        {isLoggedIn ? (
                             <>
                                 <FiLogOut /> Logout
                             </>
@@ -151,7 +143,7 @@ const Navbar = () => {
                             onClick={() => { handleAuthAction(); toggleMenu(); }}
                             className="mt-6 w-64 py-3 bg-[#86C232] hover:bg-[#76b129] text-[#191919] rounded-[30px] text-xl font-bold flex items-center justify-center gap-2 transition duration-200"
                         >
-                            {isAuthenticated ? (
+                            {isLoggedIn ? (
                                 <>
                                     <FiLogOut /> Logout
                                 </>

@@ -27,7 +27,7 @@ axiosInstance.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401 || error.response?.status === 403) {
             // Only redirect if not already on login page
-            if (!window.location.pathname.includes('/login') && !window.location.pathname === '/') {
+            if (!window.location.pathname.includes('/login') && window.location.pathname !== '/') {
                 useAuthStore.getState().logout();
                 window.location.href = '/';
             }

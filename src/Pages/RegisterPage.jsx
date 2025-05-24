@@ -57,9 +57,9 @@ const RegisterPage = () => {
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (!validatePassword(userData.password)) {
-      newErrors.password = "Password must be at least 8 characters with uppercase, lowercase, and number";
-    }
+    // if (!validatePassword(userData.password)) {
+    //   newErrors.password = "Password must be at least 8 characters with uppercase, lowercase, and number";
+    // }
 
     if (userData.password !== userData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";

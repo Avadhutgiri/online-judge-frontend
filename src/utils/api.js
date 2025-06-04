@@ -90,4 +90,9 @@ export const leaderboardAPI = {
   },
 };
 
+// Result API
+export const resultAPI = {
+  getResult: () => axiosInstance.get('/result'),
+};
+
 export default axiosInstance; 

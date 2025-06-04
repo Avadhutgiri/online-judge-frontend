@@ -3,7 +3,7 @@ import axiosInstance from '../utils/axios';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import image from "../Pages/pageassets/image.png";
-
+import { resultAPI } from '../utils/api';
 // Custom Result Card component with improved styling
 const ResultCard = ({ fieldName, fieldValue }) => {
   return (
@@ -46,7 +46,7 @@ const ResultPage = () => {
     const fetchResult = async () => {
       setLoading(true);
       try {
-        const response = await axiosInstance.get(`/result`);
+        const response = await resultAPI.getResult();
         setResult(response.data.team);
         setLoading(false);
       } catch (err) {

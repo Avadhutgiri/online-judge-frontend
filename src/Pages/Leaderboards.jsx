@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { leaderboardAPI, eventAPI } from '../utils/api';
+import useAuthStore from '../store/authStore';
 
 const Leaderboard = () => {
   // State for event and category selection
-  const [eventName, setEventName] = useState("ReverseCoding");
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [events, setEvents] = useState([]);
   const [isJunior, setIsJunior] = useState(true);
   
   // State for leaderboard data
@@ -15,6 +17,7 @@ const Leaderboard = () => {
   const [error, setError] = useState(null);
   
   const rowsPerPage = 5;
+  const user = useAuthStore((state) => state.user);
 
   // Custom colors as CSS variables to replace arbitrary values
   const customStyles = {
@@ -24,17 +27,32 @@ const Leaderboard = () => {
   };
 
   useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await eventAPI.getAllEvents();
+        setEvents(response.events);
+        if (response.events.length > 0) {
+          setSelectedEventId(response.events[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setError("Failed to load events. Please refresh the page.");
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  useEffect(() => {
     const fetchLeaderboard = async () => {
+      if (!selectedEventId) return;
+      
       setLoading(true);
       try {
-        const response = await axios.get(`https://onlinejudge.duckdns.org/api/leaderboard`, {
-          params: { event_name: eventName, is_junior: isJunior },
-          withCredentials: true,
-        });
-
-        setData(response.data.users);
-        setProblems(response.data.problems);
-        setProblemColumns(response.data.problem_columns);
+        const response = await leaderboardAPI.getLeaderboard(selectedEventId);
+        setData(response.users);
+        setProblems(response.problems);
+        setProblemColumns(response.problem_columns);
         setLoading(false);
       } catch (err) {
         setError(err.response?.data?.error || "Error fetching leaderboard");
@@ -43,7 +61,7 @@ const Leaderboard = () => {
     };
 
     fetchLeaderboard();
-  }, [eventName, isJunior]);
+  }, [selectedEventId, isJunior]);
 
   const displayedData = data.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
   const totalPages = Math.ceil(data.length / rowsPerPage);
@@ -63,6 +81,8 @@ const Leaderboard = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
+  const selectedEvent = events.find(event => event.id === selectedEventId);
+
   return (
     <div className="w-11/12 max-w-6xl mx-auto text-gray-200 mt-8 mb-16" style={customStyles}>
       {/* Hexagon-inspired header */}
@@ -72,7 +92,7 @@ const Leaderboard = () => {
           <div className="uppercase tracking-widest text-sm text-lime-400 mb-2 font-mono">Competition Standings</div>
           <h1 className="text-5xl font-bold text-white mb-1">LEADERBOARD</h1>
           <div className="h-1 w-24 bg-lime-500 mx-auto mb-3"></div>
-          <p className="text-gray-400">{eventName === "ReverseCoding" ? "Reverse Coding" : "Clash"} • {isJunior ? "Junior Division" : "Senior Division"}</p>
+          <p className="text-gray-400">{selectedEvent?.name || "Loading..."} • {isJunior ? "Junior Division" : "Senior Division"}</p>
         </div>
       </div>
 
@@ -84,28 +104,17 @@ const Leaderboard = () => {
             {/* Event selector */}
             <div className="w-full md:w-auto">
               <div className="mb-2 text-xs text-lime-400 uppercase tracking-wider">Select Event</div>
-              <div className="flex">
-                <button 
-                  onClick={() => setEventName("ReverseCoding")}
-                  className={`py-3 px-4 font-medium ${
-                    eventName === "ReverseCoding" 
-                      ? "bg-lime-800 text-white" 
-                      : "bg-black text-gray-400 hover:bg-gray-800"
-                  }`}
-                >
-                  Reverse Coding
-                </button>
-                <button 
-                  onClick={() => setEventName("Clash")}
-                  className={`py-3 px-4 font-medium ${
-                    eventName === "Clash" 
-                      ? "bg-lime-800 text-white" 
-                      : "bg-black text-gray-400 hover:bg-gray-800"
-                  }`}
-                >
-                  Clash
-                </button>
-              </div>
+              <select
+                value={selectedEventId}
+                onChange={(e) => setSelectedEventId(e.target.value)}
+                className="w-full py-3 px-4 bg-black text-white border border-gray-800 focus:border-lime-500 focus:outline-none"
+              >
+                {events.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.name}
+                  </option>
+                ))}
+              </select>
             </div>
             
             {/* Division selector */}
@@ -365,7 +374,7 @@ const Leaderboard = () => {
             <div className="absolute bottom-0 left-0 w-4 h-4 bg-lime-500"></div>
             
             <div className="font-mono text-xs text-lime-400 uppercase tracking-wider mb-1">Competition</div>
-            <div className="text-3xl font-bold text-white mt-2">{eventName === "ReverseCoding" ? "Reverse Coding" : "Clash"}</div>
+            <div className="text-3xl font-bold text-white mt-2">{selectedEvent?.name || "Loading..."}</div>
             <div className="flex items-baseline mt-2">
               <span className="text-2xl font-bold text-lime-400">{isJunior ? "Junior" : "Senior"}</span>
               <span className="ml-2 text-gray-400">division</span>

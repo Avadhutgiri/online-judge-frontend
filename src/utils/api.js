@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use Vite's environment variable syntax
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://onlinejudge.duckdns.org/';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://onlinejudge.duckdns.org';
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
+  
 // Add response interceptor for error handling
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -31,7 +31,18 @@ export const authAPI = {
 
 // Event API
 export const eventAPI = {
-  getAllEvents: () => axiosInstance.get('/api/users/events'),
+  getAllEvents: async () => {
+    try {
+      const url = `${BASE_URL}/api/users/events`;
+      console.log('Fetching events from:', url);
+      const response = await axiosInstance.get('/api/users/events');
+      console.log('Events API response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Events API error:', error);
+      throw error;
+    }
+  },
   getActiveEvents: () => axiosInstance.get('/api/users/events').then(response => ({
     events: response.data.events.filter(event => {
       const now = new Date();
@@ -65,7 +76,18 @@ export const submissionAPI = {
 
 // Leaderboard API
 export const leaderboardAPI = {
-  getLeaderboard: (eventId) => axiosInstance.get(`/api/leaderboard?event_id=${eventId}`),
+  getLeaderboard: async (eventId, isJunior) => {
+    try {
+      const url = `${BASE_URL}/api/leaderboard?event_id=${eventId}&is_junior=${isJunior}`;
+      console.log('Fetching leaderboard from:', url);
+      const response = await axiosInstance.get(`/api/leaderboard?event_id=${eventId}&is_junior=${isJunior}`);
+      console.log('Raw leaderboard response:', response);
+      return response;
+    } catch (error) {
+      console.error('Leaderboard API error:', error);
+      throw error;
+    }
+  },
 };
 
 export default axiosInstance; 

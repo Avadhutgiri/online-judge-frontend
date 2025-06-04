@@ -118,16 +118,16 @@ const RegisterPage = () => {
         event_id: userData.event_id,
       });
 
-      setSuccess("Registration Successful! Now You can Log In");
-      // Clear form
-      setUserData({
-        username: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        is_junior: false,
+        setSuccess("Registration Successful! Now You can Log In");
+        // Clear form
+        setUserData({
+          username: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          is_junior: false,
         event_id: events[0]?.id || "",
-      });
+        });
     } catch (err) {
       if (err.response) {
         // Handle specific error cases
@@ -293,12 +293,12 @@ const RegisterPage = () => {
                     </option>
                   ))}
                 </select>
-              </div>
-
+            </div>
+            
               {/* Junior Category Toggle */}
               <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
+                  <input 
+                    type="checkbox" 
                   id="is_junior"
                   name="is_junior"
                   checked={userData.is_junior}
@@ -308,17 +308,17 @@ const RegisterPage = () => {
                 <label htmlFor="is_junior" className="text-white">
                   Junior Category
                 </label>
-              </div>
-
+            </div>
+            
               {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
+            <button
+              type="submit"
+              disabled={isLoading}
                 className="w-full py-3 px-4 bg-[#86C232] text-white rounded-md hover:bg-[#61892F] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+            >
                 {isLoading ? "Registering..." : "Register"}
-              </button>
-
+            </button>
+            
               {/* Team Registration Button */}
               <div className="mt-4 text-center">
                 <button

@@ -15,8 +15,7 @@ const LoginPage = () => {
   const [events, setEvents] = useState([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const setUser = useAuthStore((state) => state.setUser);
-  const setIsLoggedIn = useAuthStore((state) => state.setIsLoggedIn);
+  const login = useAuthStore((state) => state.login);
 
   useEffect(() => {
     const fetchActiveEvents = async () => {
@@ -50,8 +49,7 @@ const LoginPage = () => {
 
     try {
       const response = await authAPI.login(logData);
-      setUser(response.data.user);
-      setIsLoggedIn(true);
+      login(response.user);
       navigate("/questionHub");
     } catch (err) {
       setError(err.response?.data?.error || "Login failed. Please try again.");

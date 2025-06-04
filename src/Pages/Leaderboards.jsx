@@ -1,42 +1,31 @@
 import React, { useState, useEffect } from 'react';
+import { Trophy, Medal, Award, Users, Target, Calendar } from 'lucide-react';
 import { leaderboardAPI, eventAPI } from '../utils/api';
-import useAuthStore from '../store/authStore';
+
+const useAuthStore = (selector) => selector({ user: { name: "Demo User" } });
 
 const Leaderboard = () => {
-  // State for event and category selection
-  const [selectedEventId, setSelectedEventId] = useState("");
+  const [leaderboardData, setLeaderboardData] = useState(null);
   const [events, setEvents] = useState([]);
-  const [isJunior, setIsJunior] = useState(true);
-  
-  // State for leaderboard data
-  const [data, setData] = useState([]);
-  const [problems, setProblems] = useState([]);
-  const [problemColumns, setProblemColumns] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [isJunior, setIsJunior] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const rowsPerPage = 5;
   const user = useAuthStore((state) => state.user);
-
-  // Custom colors as CSS variables to replace arbitrary values
-  const customStyles = {
-    "--accent-green": "#86C232",
-    "--accent-green-dark": "#689427",
-    "--accent-green-light": "#A2D158"
-  };
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        console.log('Starting to fetch events...');
         const response = await eventAPI.getAllEvents();
-        setEvents(response.events);
-        if (response.events.length > 0) {
+        console.log('Events response:', response);
+        setEvents(response.events || []);
+        if (response.events && response.events.length > 0) {
           setSelectedEventId(response.events[0].id);
         }
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        setError("Failed to load events. Please refresh the page.");
+      } catch (err) {
+        console.error('Error fetching events:', err);
+        setError("Failed to load events");
       }
     };
 
@@ -46,16 +35,19 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       if (!selectedEventId) return;
-      
+
       setLoading(true);
+      setError(null);
+
       try {
-        const response = await leaderboardAPI.getLeaderboard(selectedEventId);
-        setData(response.users);
-        setProblems(response.problems);
-        setProblemColumns(response.problem_columns);
-        setLoading(false);
+        console.log('Fetching leaderboard for event:', selectedEventId, 'isJunior:', isJunior);
+        const response = await leaderboardAPI.getLeaderboard(selectedEventId, isJunior.toString());
+        console.log('Leaderboard response:', response);
+        setLeaderboardData(response.data);
       } catch (err) {
-        setError(err.response?.data?.error || "Error fetching leaderboard");
+        console.error('Error fetching leaderboard:', err);
+        setError("Failed to load leaderboard data");
+      } finally {
         setLoading(false);
       }
     };
@@ -63,207 +55,229 @@ const Leaderboard = () => {
     fetchLeaderboard();
   }, [selectedEventId, isJunior]);
 
-  const displayedData = data.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
-  const totalPages = Math.ceil(data.length / rowsPerPage);
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  const handleEventChange = (e) => {
+    setSelectedEventId(e.target.value);
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  const handleCategoryChange = (e) => {
+    setIsJunior(e.target.value === "junior");
   };
 
-  // Format time to be more readable
-  const formatTime = (timeString) => {
-    if (!timeString) return '-';
-    const date = new Date(timeString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const getRankIcon = (rank) => {
+    switch(rank) {
+      case 1: return <Trophy className="w-5 h-5 text-yellow-400" />;
+      case 2: return <Medal className="w-5 h-5 text-gray-300" />;
+      case 3: return <Award className="w-5 h-5 text-amber-600" />;
+      default: return <div className="w-5 h-5 flex items-center justify-center text-xs font-bold text-gray-400">#{rank}</div>;
+    }
   };
 
-  const selectedEvent = events.find(event => event.id === selectedEventId);
+  const getScoreColor = (score, maxScore = 100) => {
+    const percentage = (score / maxScore) * 100;
+    if (percentage >= 90) return "text-green-400";
+    if (percentage >= 70) return "text-yellow-400";
+    if (percentage >= 50) return "text-orange-400";
+    return "text-red-400";
+  };
+
+  if (loading && !leaderboardData) {
+  return (
+      <div className="flex flex-col items-center justify-center h-[85vh] w-full bg-gray-900">
+        <div className="relative mb-8">
+          <div className="w-16 h-16 border-4 border-gray-800 border-t-green-500 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-green-400 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+        </div>
+        <div className="text-center">
+          <p className="text-green-500 font-mono tracking-wider text-lg font-bold mb-2">LOADING LEADERBOARD</p>
+          <div className="flex justify-center space-x-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[85vh] w-full bg-gray-900 p-4">
+        <div className="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700 max-w-md w-full transform hover:scale-105 transition-transform duration-300">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Oops! Something went wrong</h2>
+            <p className="text-gray-400 mb-6">{error}</p>
+          </div>
+          <button 
+            className="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-red-700 hover:to-red-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-11/12 max-w-6xl mx-auto text-gray-200 mt-8 mb-16" style={customStyles}>
-      {/* Hexagon-inspired header */}
-      <div className="relative flex items-center justify-center py-16 mb-10">
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-64 h-64 bg-lime-700 opacity-20 rotate-45"></div>
-        <div className="relative z-10 text-center">
-          <div className="uppercase tracking-widest text-sm text-lime-400 mb-2 font-mono">Competition Standings</div>
-          <h1 className="text-5xl font-bold text-white mb-1">LEADERBOARD</h1>
-          <div className="h-1 w-24 bg-lime-500 mx-auto mb-3"></div>
-          <p className="text-gray-400">{selectedEvent?.name || "Loading..."} • {isJunior ? "Junior Division" : "Senior Division"}</p>
+    <div className="min-h-[85vh] w-full bg-gray-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Enhanced Header */}
+        <div className="text-center mb-10">
+          <div className="flex justify-center items-center mb-4">
+            <Trophy className="w-10 h-10 text-green-500 mr-3" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              Leaderboard
+            </h1>
         </div>
-      </div>
-
-      {/* Control panel - Angled design */}
-      <div className="relative mb-10 overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-gray-900 transform skew-y-3"></div>
-        <div className="relative z-10 py-10 px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            {/* Event selector */}
-            <div className="w-full md:w-auto">
-              <div className="mb-2 text-xs text-lime-400 uppercase tracking-wider">Select Event</div>
-              <select
-                value={selectedEventId}
-                onChange={(e) => setSelectedEventId(e.target.value)}
-                className="w-full py-3 px-4 bg-black text-white border border-gray-800 focus:border-lime-500 focus:outline-none"
-              >
-                {events.map((event) => (
-                  <option key={event.id} value={event.id}>
-                    {event.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Division selector */}
-            <div className="w-full md:w-auto">
-              <div className="mb-2 text-xs text-lime-400 uppercase tracking-wider">Select Division</div>
-              <div className="flex">
-                <button 
-                  onClick={() => setIsJunior(true)}
-                  className={`py-3 px-4 font-medium ${
-                    isJunior 
-                      ? "bg-lime-800 text-white" 
-                      : "bg-black text-gray-400 hover:bg-gray-800"
-                  }`}
-                >
-                  Junior
-                </button>
-                <button 
-                  onClick={() => setIsJunior(false)}
-                  className={`py-3 px-4 font-medium ${
-                    !isJunior 
-                      ? "bg-lime-800 text-white" 
-                      : "bg-black text-gray-400 hover:bg-gray-800"
-                  }`}
-                >
-                  Senior
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Diagonal-bordered table container */}
-      <div className="relative bg-black p-1">
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-0 left-0 w-2 h-2 bg-lime-500"></div>
-          <div className="absolute top-0 right-0 w-2 h-2 bg-lime-500"></div>
-          <div className="absolute bottom-0 left-0 w-2 h-2 bg-lime-500"></div>
-          <div className="absolute bottom-0 right-0 w-2 h-2 bg-lime-500"></div>
-          
-          <div className="absolute top-0 left-2 w-1/3 h-0.5 bg-lime-500"></div>
-          <div className="absolute top-0 right-2 w-1/3 h-0.5 bg-lime-500"></div>
-          <div className="absolute bottom-0 left-2 w-1/3 h-0.5 bg-lime-500"></div>
-          <div className="absolute bottom-0 right-2 w-1/3 h-0.5 bg-lime-500"></div>
-          
-          <div className="absolute top-2 left-0 w-0.5 h-1/3 bg-lime-500"></div>
-          <div className="absolute top-2 right-0 w-0.5 h-1/3 bg-lime-500"></div>
-          <div className="absolute bottom-2 left-0 w-0.5 h-1/3 bg-lime-500"></div>
-          <div className="absolute bottom-2 right-0 w-0.5 h-1/3 bg-lime-500"></div>
-        </div>
-        
-        <div className="bg-gray-900 bg-opacity-90 p-6">
-          {/* Table header with angled design */}
-          <div className="relative mb-4">
-            <div className="absolute top-0 left-0 w-full h-full bg-lime-900 bg-opacity-20 transform -skew-x-12"></div>
-            <div className="relative flex justify-between items-center px-6 py-4">
-              <h2 className="text-xl font-mono text-lime-400">RANKINGS</h2>
-              {!loading && !error && data.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-lime-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-400">LIVE</span>
+          <div className="h-1 w-32 bg-gradient-to-r from-green-500 to-green-400 mx-auto rounded-full"></div>
+          {leaderboardData && (
+            <div className="mt-6 bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 inline-block border border-gray-700">
+              <div className="flex items-center justify-center space-x-4 text-sm">
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 text-green-500 mr-2" />
+                  <span className="text-white font-medium">{leaderboardData.event_name}</span>
                 </div>
-              )}
-            </div>
+                <div className="w-px h-4 bg-gray-600"></div>
+                <div className="flex items-center">
+                  <Users className="w-4 h-4 text-green-500 mr-2" />
+                  <span className="text-gray-300">{isJunior ? "Junior" : "Senior"} Division</span>
           </div>
+              </div>
+            </div>
+          )}
+              </div>
 
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="relative">
-                <div className="w-16 h-16 border-t-2 border-b-2 border-lime-500 rounded-full animate-spin"></div>
-                <div className="absolute top-0 left-0 w-16 h-16 border-l-2 border-r-2 border-transparent rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
-              </div>
-              <p className="mt-4 text-gray-400 font-mono">LOADING DATA</p>
+        {/* Enhanced Controls */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="relative flex-1">
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={selectedEventId}
+              onChange={handleEventChange}
+              className="w-full bg-gray-800 text-white pl-10 pr-4 py-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none cursor-pointer hover:bg-gray-750 transition-colors duration-200"
+            >
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.name}
+                </option>
+              ))}
+            </select>
             </div>
-          ) : error ? (
-            <div className="text-center py-16">
-              <div className="inline-block p-3 rounded-full bg-gray-800 mb-4">
-                <svg className="w-10 h-10 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+
+          <div className="relative flex-1">
+            <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={isJunior ? "junior" : "senior"}
+              onChange={handleCategoryChange}
+              className="w-full bg-gray-800 text-white pl-10 pr-4 py-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none cursor-pointer hover:bg-gray-750 transition-colors duration-200"
+            >
+              <option value="senior">Senior Division</option>
+              <option value="junior">Junior Division</option>
+            </select>
               </div>
-              <p className="text-lg text-gray-300 mb-2">Connection Error</p>
-              <p className="text-sm text-gray-400">{error}</p>
             </div>
-          ) : displayedData.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="inline-block p-3 rounded-full bg-gray-800 mb-4">
-                <svg className="w-10 h-10 text-lime-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <p className="text-lg text-gray-300 mb-2">No Data Available</p>
-              <p className="text-sm text-gray-400">Check back soon for results</p>
-            </div>
-          ) : (
+
+        {/* Enhanced Leaderboard Table */}
+        {leaderboardData && (
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr>
-                    <th className="px-4 py-4 text-left font-mono text-xs text-lime-400 uppercase tracking-wider">#</th>
-                    <th className="px-4 py-4 text-left font-mono text-xs text-lime-400 uppercase tracking-wider">Team</th>
-                    {problemColumns.map((col, index) => (
-                      <th key={index} className="px-4 py-4 text-center font-mono text-xs text-lime-400 uppercase tracking-wider">
-                        P{index + 1}
+                  <tr className="bg-gradient-to-r from-gray-800 to-gray-700">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">
+                      <div className="flex items-center">
+                        <Trophy className="w-4 h-4 mr-2 text-green-500" />
+                        Rank
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 mr-2 text-green-500" />
+                        Team
+                      </div>
+                    </th>
+                    {leaderboardData.problems?.map((problem, index) => (
+                      <th key={problem.id} className="px-6 py-4 text-center text-sm font-semibold text-gray-200 uppercase tracking-wider">
+                        <div className="flex flex-col items-center">
+                          <Target className="w-4 h-4 mb-1 text-green-500" />
+                          <span className="truncate max-w-24">{problem.title}</span>
+                        </div>
                       </th>
                     ))}
-                    <th className="px-4 py-4 text-center font-mono text-xs text-lime-400 uppercase tracking-wider">Time</th>
-                    <th className="px-4 py-4 text-center font-mono text-xs text-lime-400 uppercase tracking-wider">Score</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-200 uppercase tracking-wider">
+                      <div className="flex flex-col items-center">
+                        <Award className="w-4 h-4 mb-1 text-green-500" />
+                        Total
+                      </div>
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-lime-900 divide-opacity-30">
-                  {displayedData.map((entry, index) => (
-                    <tr key={index} className="group hover:bg-lime-900 hover:bg-opacity-10 transition-all duration-300">
-                      <td className="px-4 py-4 whitespace-nowrap">
+                <tbody className="divide-y divide-gray-700">
+                  {leaderboardData.users?.map((team, index) => (
+                    <tr 
+                      key={team.teamname} 
+                      className={`hover:bg-gray-700/50 transition-all duration-300 transform hover:scale-[1.01] ${
+                        team.rank <= 3 ? 'bg-gray-800/30' : ''
+                      }`}
+                      style={{
+                        animationDelay: `${index * 100}ms`,
+                        animation: 'fadeInUp 0.6s ease-out forwards'
+                      }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
+                          {getRankIcon(team.rank)}
+                          <span className={`text-sm font-bold ${team.rank <= 3 ? 'text-white' : 'text-gray-300'}`}>
+                            {team.rank}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center 
-                                          ${entry.rank === 1 
-                                            ? 'text-black font-bold bg-lime-400' 
-                                            : entry.rank === 2 
-                                              ? 'text-black font-bold bg-lime-300' 
-                                              : entry.rank === 3 
-                                                ? 'text-black font-bold bg-lime-200' 
-                                                : 'text-lime-400 bg-transparent border border-lime-500'}`}>
-                            {entry.rank}
-                          </div>
+                          <div className={`w-3 h-3 rounded-full mr-3 ${
+                            team.rank === 1 ? 'bg-yellow-400' : 
+                            team.rank === 2 ? 'bg-gray-300' : 
+                            team.rank === 3 ? 'bg-amber-600' : 'bg-gray-500'
+                          }`}></div>
+                          <span className={`text-sm font-semibold ${team.rank <= 3 ? 'text-white' : 'text-gray-200'}`}>
+                            {team.teamname}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-4 py-4">
-                        <div className="font-medium text-white group-hover:text-lime-400 transition-colors duration-200">
-                          {entry.teamname}
-                        </div>
-                      </td>
-                      {problemColumns.map((col, idx) => (
-                        <td key={idx} className="px-4 py-4 text-center">
-                          {entry[col] ? (
-                            <div className="inline-block h-6 w-6 rounded-sm bg-lime-900 bg-opacity-40 text-lime-400">
-                              {entry[col]}
+                      {leaderboardData.problem_columns?.map((col, colIndex) => (
+                        <td key={col} className="px-6 py-4 whitespace-nowrap text-center">
+                          <div className="flex flex-col items-center">
+                            <span className={`text-sm font-medium ${getScoreColor(team[col] || 0)}`}>
+                              {team[col] || 0}
+                            </span>
+                            <div className="w-full bg-gray-700 rounded-full h-1 mt-1 max-w-16">
+                              <div 
+                                className={`h-1 rounded-full ${
+                                  (team[col] || 0) >= 90 ? 'bg-green-400' :
+                                  (team[col] || 0) >= 70 ? 'bg-yellow-400' :
+                                  (team[col] || 0) >= 50 ? 'bg-orange-400' : 'bg-red-400'
+                                }`}
+                                style={{ width: `${Math.min((team[col] || 0), 100)}%` }}
+                              ></div>
                             </div>
-                          ) : (
-                            <div className="inline-block h-6 w-6 rounded-sm border border-gray-800 text-gray-700">-</div>
-                          )}
+                          </div>
                         </td>
                       ))}
-                      <td className="px-4 py-4 text-center text-gray-400 font-mono">
-                        {formatTime(entry.first_solve_time)}
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="font-bold text-lg text-lime-400">
-                          {entry.total_score}
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex flex-col items-center">
+                          <span className={`text-lg font-bold ${
+                            team.rank === 1 ? 'text-yellow-400' :
+                            team.rank === 2 ? 'text-gray-300' :
+                            team.rank === 3 ? 'text-amber-600' : 'text-green-400'
+                          }`}>
+                            {team.total_score}
+                          </span>
+                          <div className="text-xs text-gray-500">points</div>
                         </div>
                       </td>
                     </tr>
@@ -271,117 +285,29 @@ const Leaderboard = () => {
                 </tbody>
               </table>
             </div>
-          )}
-          
-          {/* Pagination */}
-          {!loading && !error && displayedData.length > 0 && (
-            <div className="mt-8 flex justify-between items-center">
-              <button
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                className={`relative overflow-hidden px-5 py-2 font-mono text-sm transition-colors duration-300 ${
-                  currentPage === 1 
-                    ? 'bg-gray-800 text-gray-600 cursor-not-allowed' 
-                    : 'bg-black hover:bg-lime-900 text-lime-400'
-                }`}
-              >
-                <span className="relative z-10">&#8592; PREV</span>
-                {currentPage !== 1 && (
-                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-lime-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
-                )}
-              </button>
-              
-              <div className="flex items-center gap-3">
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  // Adjust pageNum calculation for pagination with ellipsis
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`w-8 h-8 flex items-center justify-center font-mono transition-colors duration-200 ${
-                        currentPage === pageNum
-                          ? 'bg-lime-500 text-black'
-                          : 'bg-black border border-lime-900 text-lime-400 hover:bg-lime-900 hover:bg-opacity-30'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className={`relative overflow-hidden px-5 py-2 font-mono text-sm transition-colors duration-300 ${
-                  currentPage === totalPages 
-                    ? 'bg-gray-800 text-gray-600 cursor-not-allowed' 
-                    : 'bg-black hover:bg-lime-900 text-lime-400'
-                }`}
-              >
-                <span className="relative z-10">NEXT &#8594;</span>
-                {currentPage !== totalPages && (
-                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-lime-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
-                )}
-              </button>
             </div>
           )}
-        </div>
       </div>
       
-      {/* Stats grid with geometric shapes */}
-      {!loading && !error && data.length > 0 && (
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="relative bg-black border border-gray-800 p-6 overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-lime-900 opacity-20 transform rotate-45 translate-x-8 -translate-y-8"></div>
-            <div className="absolute bottom-0 left-0 w-4 h-4 bg-lime-500"></div>
-            
-            <div className="font-mono text-xs text-lime-400 uppercase tracking-wider mb-1">Top Performer</div>
-            <div className="text-3xl font-bold text-white mt-2">{data[0]?.teamname || 'N/A'}</div>
-            <div className="flex items-baseline mt-2">
-              <span className="text-2xl font-bold text-lime-400">{data[0]?.total_score || 0}</span>
-              <span className="ml-2 text-gray-400">points</span>
-            </div>
-          </div>
-          
-          <div className="relative bg-black border border-gray-800 p-6 overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-lime-900 opacity-20 transform rotate-45 translate-x-8 -translate-y-8"></div>
-            <div className="absolute bottom-0 left-0 w-4 h-4 bg-lime-500"></div>
-            
-            <div className="font-mono text-xs text-lime-400 uppercase tracking-wider mb-1">Teams Participating</div>
-            <div className="text-3xl font-bold text-white mt-2">{data.length}</div>
-            <div className="flex items-baseline mt-2">
-              <span className="text-2xl font-bold text-lime-400">
-                {Math.round(data.reduce((sum, team) => sum + team.total_score, 0) / data.length)}
-              </span>
-              <span className="ml-2 text-gray-400">avg. score</span>
-            </div>
-          </div>
-          
-          <div className="relative bg-black border border-gray-800 p-6 overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-lime-900 opacity-20 transform rotate-45 translate-x-8 -translate-y-8"></div>
-            <div className="absolute bottom-0 left-0 w-4 h-4 bg-lime-500"></div>
-            
-            <div className="font-mono text-xs text-lime-400 uppercase tracking-wider mb-1">Competition</div>
-            <div className="text-3xl font-bold text-white mt-2">{selectedEvent?.name || "Loading..."}</div>
-            <div className="flex items-baseline mt-2">
-              <span className="text-2xl font-bold text-lime-400">{isJunior ? "Junior" : "Senior"}</span>
-              <span className="ml-2 text-gray-400">division</span>
-            </div>
-          </div>
-        </div>
-      )}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        select {
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+          background-position: right 0.5rem center;
+          background-repeat: no-repeat;
+          background-size: 1.5em 1.5em;
+        }
+      `}</style>
     </div>
   );
 };

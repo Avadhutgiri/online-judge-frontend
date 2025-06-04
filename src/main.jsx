@@ -19,10 +19,8 @@ const AppWrapper = () => {
   const isLoading = useAuthStore((state) => state.isLoading);
 
   useEffect(() => {
-    if (isLoading) {
-      checkAuth();
-    }
-  }, [checkAuth, isLoading]);
+    checkAuth();
+  }, []); // Only run once when component mounts
 
   return (
     <RouterProvider router={router} />

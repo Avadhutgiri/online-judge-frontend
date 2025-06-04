@@ -16,7 +16,9 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        console.log('Starting to fetch events...');
         const response = await eventAPI.getAllEvents();
+        console.log('Events response:', response);
         setEvents(response.events || []);
         if (response.events && response.events.length > 0) {
           setSelectedEventId(response.events[0].id);
@@ -38,7 +40,9 @@ const Leaderboard = () => {
       setError(null);
 
       try {
+        console.log('Fetching leaderboard for event:', selectedEventId, 'isJunior:', isJunior);
         const response = await leaderboardAPI.getLeaderboard(selectedEventId, isJunior.toString());
+        console.log('Leaderboard response:', response);
         setLeaderboardData(response.data);
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
@@ -49,7 +53,7 @@ const Leaderboard = () => {
     };
 
     fetchLeaderboard();
-  }, [eventName, isJunior]);
+  }, [selectedEventId, isJunior]);
 
   const handleEventChange = (e) => {
     setSelectedEventId(e.target.value);

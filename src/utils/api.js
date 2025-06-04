@@ -55,8 +55,8 @@ export const eventAPI = {
 
 // Team API
 export const teamAPI = {
-  registerTeam: (data) => axiosInstance.post('/api/teams/register', data),
-  getTeamInfo: () => axiosInstance.get('/api/teams/info'),
+  registerTeam: (data) => axiosInstance.post('/api/users/registerTeam', data),
+  
 };
 
 // Problem API

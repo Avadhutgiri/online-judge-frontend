@@ -26,8 +26,12 @@ axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401 || error.response?.status === 403) {
-            // Only redirect if not already on login page
-            if (!window.location.pathname.includes('/login') && window.location.pathname !== '/') {
+            // Only redirect if not on login, register, or registerTeam pages
+            const currentPath = window.location.pathname;
+            if (!currentPath.includes('/login') && 
+                currentPath !== '/' && 
+                currentPath !== '/register' && 
+                currentPath !== '/registerTeam') {
                 useAuthStore.getState().logout();
                 window.location.href = '/';
             }

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../utils/axios";
+import { authAPI, eventAPI } from "../utils/api";
 
 const RegisterPage = () => {
   const [userData, setUserData] = useState({
@@ -9,8 +9,9 @@ const RegisterPage = () => {
     password: "",
     confirmPassword: "",
     is_junior: false,
-    event_name: "Reverse Coding",
+    event_id: "",
   });
+  const [events, setEvents] = useState([]);
   const [errors, setErrors] = useState({
     username: "",
     email: "",
@@ -57,10 +58,6 @@ const RegisterPage = () => {
       newErrors.email = "Please enter a valid email address";
     }
 
-    // if (!validatePassword(userData.password)) {
-    //   newErrors.password = "Password must be at least 8 characters with uppercase, lowercase, and number";
-    // }
-
     if (userData.password !== userData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
@@ -69,20 +66,36 @@ const RegisterPage = () => {
     return !Object.values(newErrors).some(error => error !== "");
   };
 
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await eventAPI.getAllEvents();
+        setEvents(response.events);
+        if (response.events.length > 0) {
+          setUserData(prev => ({ ...prev, event_id: response.events[0].id }));
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setErrors(prev => ({ ...prev, general: "Failed to load events. Please refresh the page." }));
+      }
+    };
+    fetchEvents();
+  }, []);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUserData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setUserData(prev => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
-  const toggleEvent = () => {
-    setUserData((prev) => ({
-      ...prev,
-      event_name: prev.event_name === "Reverse Coding" ? "Clash" : "Reverse Coding",
-    }));
+  const navigateToTeamRegister = () => {
+    navigate("/registerTeam");
   };
 
   const handleRegister = async (e) => {
@@ -97,32 +110,30 @@ const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axiosInstance.post("/api/users/register", {
+      const response = await authAPI.register({
         username: userData.username,
         email: userData.email,
         password: userData.password,
         is_junior: userData.is_junior,
-        event_name: userData.event_name,
+        event_id: userData.event_id,
       });
 
-      if (response.status === 201) {
-        setSuccess("Registration Successful! Now You can Log In");
-        // Clear form
-        setUserData({
-          username: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-          is_junior: false,
-          event_name: "Reverse Coding",
-        });
-      }
+      setSuccess("Registration Successful! Now You can Log In");
+      // Clear form
+      setUserData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        is_junior: false,
+        event_id: events[0]?.id || "",
+      });
     } catch (err) {
       if (err.response) {
         // Handle specific error cases
         switch (err.response.status) {
           case 400:
-            setErrors(prev => ({ ...prev, general: "Invalid input data" }));
+            setErrors(prev => ({ ...prev, general: err.response.data.error || "Invalid input data" }));
             break;
           case 409:
             setErrors(prev => ({ ...prev, general: "Username or email already exists" }));
@@ -260,82 +271,64 @@ const RegisterPage = () => {
                   <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
                 )}
               </div>
-            </div>
-            
-            {/* Event Toggle */}
-            <div className="pt-1 pb-1">
-              <div className="flex items-center justify-between p-3 rounded-md bg-[#222629]/60">
-                <span className={`text-base font-medium ${userData.event_name === "Reverse Coding" ? "text-[#86C232]" : "text-gray-400"}`}>
-                  Reverse Coding
-                </span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer" 
-                    checked={userData.event_name === "Clash"} 
-                    onChange={toggleEvent} 
-                  />
-                  <div className="w-12 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full 
-                  peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white 
-                  after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#86C232]"></div>
-                </label>
-                <span className={`text-base font-medium ${userData.event_name === "Clash" ? "text-[#86C232]" : "text-gray-400"}`}>
-                  Clash
-                </span>
-              </div>
-            </div>
-            
-            {/* Junior Checkbox */}
-            <div className="flex items-center">
-              <label className="flex items-center cursor-pointer space-x-3">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={userData.is_junior}
-                    onChange={(e) => setUserData({ ...userData, is_junior: e.target.checked })}
-                    className="sr-only"
-                  />
-                  <div className={`block ${userData.is_junior ? 'bg-[#86C232]' : 'bg-gray-700'} w-6 h-6 rounded-md transition-colors duration-300`}></div>
-                  {userData.is_junior && (
-                    <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-sm">
-                      <svg className="w-4 h-4 text-[#86C232]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <span className="text-gray-300 text-sm font-medium">Is Junior?</span>
-              </label>
-            </div>
-            
-            {/* Register Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-3 px-4 ${isLoading ? 'bg-gray-700 cursor-not-allowed' : 'bg-[#86C232] hover:bg-[#7BB62C]'} text-black font-bold rounded-md transition-colors duration-300 shadow-md relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#86C232] focus:ring-opacity-50 flex justify-center items-center`}
-            >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+
+              {/* Event Selection */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                   </svg>
-                  Processing...
-                </>
-              ) : "REGISTER"}
-            </button>
-            
-            {/* Team Registration Link */}
-            <div className="pt-2 text-center">
-              <p className="text-sm text-gray-400">
-                Want to register as a team?{" "}
-                <a 
-                  href="/registerTeam" 
-                  className="text-[#86C232] hover:text-[#a7e959] hover:underline transition-colors duration-300"
+                </div>
+                <select
+                  onChange={handleChange}
+                  value={userData.event_id}
+                  className="w-full pl-10 pr-4 py-3 bg-[#222629] border border-gray-700 focus:border-[#86C232] text-white rounded-md outline-none transition-colors duration-300"
+                  id="event_id"
+                  name="event_id"
+                  required
                 >
-                  Create a Team
-                </a>
-              </p>
+                  {events.map((event) => (
+                    <option key={event.id} value={event.id}>
+                      {event.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Junior Category Toggle */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_junior"
+                  name="is_junior"
+                  checked={userData.is_junior}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-[#86C232] bg-[#222629] border-gray-700 rounded focus:ring-[#86C232]"
+                />
+                <label htmlFor="is_junior" className="text-white">
+                  Junior Category
+                </label>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-[#86C232] text-white rounded-md hover:bg-[#61892F] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Registering..." : "Register"}
+              </button>
+
+              {/* Team Registration Button */}
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={navigateToTeamRegister}
+                  className="w-full py-3 px-4 bg-[#222629] hover:bg-[#2C3033] text-[#86C232] font-bold rounded-md transition-colors duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-[#86C232] focus:ring-opacity-50"
+                >
+                  REGISTER AS TEAM
+                </button>
+              </div>
             </div>
           </div>
         </form>

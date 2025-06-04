@@ -1,18 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authAPI, eventAPI } from "../utils/api";
+import axiosInstance from "../utils/axios";
 import useAuthStore from "../store/authStore";
 
 const LoginPage = () => {
-  const navigate = useNavigate();
-  const [logData, setLogData] = useState({
-    username: "",
-    password: "",
-    team_login: false,
-    team_name: "",
-    event_id: ""
-  });
-  const [events, setEvents] = useState([]);
+  const [logData, setLogData] = useState({ email: "", password: "", event_name: "Reverse Coding" });
+  const [teamLogin, setTeamLogin] = useState(false);
+  const [teamName, setTeamName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const login = useAuthStore((state) => state.login);
@@ -34,12 +28,15 @@ const LoginPage = () => {
     fetchActiveEvents();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setLogData(prev => ({
+  const toggleEvent = () => {
+    setLogData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      event_name: prev.event_name === "Reverse Coding" ? "Clash" : "Reverse Coding",
     }));
+  };
+  
+  const navigateToRegister = () => {
+    navigate("/register");
   };
 
   const logUser = async (e) => {
@@ -52,6 +49,7 @@ const LoginPage = () => {
       login(response.user);
       navigate("/questionHub");
     } catch (err) {
+      console.error("Login error:", err);
       setError(err.response?.data?.error || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
@@ -77,7 +75,7 @@ const LoginPage = () => {
           </div>
           
           {/* Form body */}
-          <div className="p-6 space-y-5">
+          <div className="p-6 space-y-6">
             {error && (
               <div className="bg-red-900/30 border border-red-500/50 text-red-400 px-4 py-3 rounded-md text-sm animate-pulse">
                 {error}
@@ -93,17 +91,16 @@ const LoginPage = () => {
                   </svg>
                 </div>
                 <input
-                  onChange={handleChange}
-                  value={logData.username}
+                  onChange={addData}
+                  value={logData.email}
                   className="w-full pl-10 pr-4 py-3 bg-[#222629] border border-gray-700 focus:border-[#86C232] text-white rounded-md outline-none transition-colors duration-300"
-                  id="username"
-                  name="username"
+                  name="email"
                   type="text"
                   placeholder="Username"
                   required
                 />
               </div>
-              
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -111,83 +108,75 @@ const LoginPage = () => {
                   </svg>
                 </div>
                 <input
-                  onChange={handleChange}
+                  onChange={addData}
                   value={logData.password}
                   className="w-full pl-10 pr-4 py-3 bg-[#222629] border border-gray-700 focus:border-[#86C232] text-white rounded-md outline-none transition-colors duration-300"
-                  id="password"
                   name="password"
                   type="password"
                   placeholder="Password"
                   required
                 />
               </div>
-
-              {/* Event Selection */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                </div>
-                <select
-                  onChange={handleChange}
-                  value={logData.event_id}
-                  className="w-full pl-10 pr-4 py-3 bg-[#222629] border border-gray-700 focus:border-[#86C232] text-white rounded-md outline-none transition-colors duration-300"
-                  name="event_id"
-                  required
-                >
-                  {events.map((event) => (
-                    <option key={event.id} value={event.id}>
-                      {event.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Team Login Toggle */}
-              <div className="flex items-center">
-                <label className="flex items-center cursor-pointer space-x-3">
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      checked={logData.team_login}
-                      onChange={handleChange}
-                      name="team_login"
-                      className="sr-only"
-                    />
-                    <div className={`block ${logData.team_login ? 'bg-[#86C232]' : 'bg-gray-700'} w-6 h-6 rounded-md transition-colors duration-300`}></div>
-                    {logData.team_login && (
-                      <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-sm">
-                        <svg className="w-4 h-4 text-[#86C232]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-gray-300 text-sm font-medium">Login as Team</span>
-                </label>
-              </div>
-
-              {/* Team Name Input (shown only when team login is selected) */}
-              {logData.team_login && (
+              
+              {teamLogin && (
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                   </div>
                   <input
-                    onChange={handleChange}
-                    value={logData.team_name}
+                    onChange={(e) => setTeamName(e.target.value)}
+                    value={teamName}
                     className="w-full pl-10 pr-4 py-3 bg-[#222629] border border-gray-700 focus:border-[#86C232] text-white rounded-md outline-none transition-colors duration-300"
-                    id="team_name"
-                    name="team_name"
+                    name="teamName"
                     type="text"
                     placeholder="Team Name"
-                    required={logData.team_login}
+                    required
                   />
                 </div>
               )}
+            </div>
+            
+            {/* Event Toggle */}
+            <div className="pt-2 pb-2">
+              <div className="flex items-center justify-between p-3 rounded-md bg-[#222629]/60">
+                <span className={`text-base font-medium ${logData.event_name === "Reverse Coding" ? "text-[#86C232]" : "text-gray-400"}`}>
+                  Reverse Coding
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" checked={logData.event_name === "Clash"} onChange={toggleEvent} />
+                  <div className="w-12 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full 
+                  peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white 
+                  after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#86C232]"></div>
+                </label>
+                <span className={`text-base font-medium ${logData.event_name === "Clash" ? "text-[#86C232]" : "text-gray-400"}`}>
+                  Clash
+                </span>
+              </div>
+            </div>
+            
+            {/* Team Login Checkbox */}
+            <div className="flex items-center">
+              <label className="flex items-center cursor-pointer space-x-3">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={teamLogin}
+                    onChange={(e) => setTeamLogin(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <div className={`block ${teamLogin ? 'bg-[#86C232]' : 'bg-gray-700'} w-6 h-6 rounded-md transition-colors duration-300`}></div>
+                  {teamLogin && (
+                    <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-sm">
+                      <svg className="w-4 h-4 text-[#86C232]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <span className="text-gray-300 text-sm font-medium">Login as a Team</span>
+              </label>
             </div>
             
             {/* Login Button */}
@@ -206,18 +195,14 @@ const LoginPage = () => {
                 </>
               ) : "LOGIN"}
             </button>
-            
-            {/* Register Link */}
-            <div className="pt-2 text-center">
-              <p className="text-sm text-gray-400">
-                Don't have an account?{" "}
-                <a 
-                  href="/register" 
-                  className="text-[#86C232] hover:text-[#a7e959] hover:underline transition-colors duration-300"
-                >
-                  Register Here
-                </a>
-              </p>
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={navigateToRegister}
+                className="w-full py-3 px-4 bg-[#222629] hover:bg-[#2C3033] text-[#86C232] font-bold rounded-md transition-colors duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-[#86C232] focus:ring-opacity-50"
+              >
+                REGISTER
+              </button>
             </div>
           </div>
         </form>

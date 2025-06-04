@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authAPI, eventAPI } from "../utils/api";
+import axiosInstance from "../utils/axios";
 
 const RegisterPage = () => {
   const [userData, setUserData] = useState({
@@ -9,9 +9,8 @@ const RegisterPage = () => {
     password: "",
     confirmPassword: "",
     is_junior: false,
-    event_id: "",
+    event_name: "Reverse Coding",
   });
-  const [events, setEvents] = useState([]);
   const [errors, setErrors] = useState({
     username: "",
     email: "",
@@ -58,6 +57,10 @@ const RegisterPage = () => {
       newErrors.email = "Please enter a valid email address";
     }
 
+    // if (!validatePassword(userData.password)) {
+    //   newErrors.password = "Password must be at least 8 characters with uppercase, lowercase, and number";
+    // }
+
     if (userData.password !== userData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
@@ -66,36 +69,20 @@ const RegisterPage = () => {
     return !Object.values(newErrors).some(error => error !== "");
   };
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await eventAPI.getAllEvents();
-        setEvents(response.events);
-        if (response.events.length > 0) {
-          setUserData(prev => ({ ...prev, event_id: response.events[0].id }));
-        }
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        setErrors(prev => ({ ...prev, general: "Failed to load events. Please refresh the page." }));
-      }
-    };
-    fetchEvents();
-  }, []);
-
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setUserData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }));
+    const { name, value } = e.target;
+    setUserData(prev => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
-  const navigateToTeamRegister = () => {
-    navigate("/registerTeam");
+  const toggleEvent = () => {
+    setUserData((prev) => ({
+      ...prev,
+      event_name: prev.event_name === "Reverse Coding" ? "Clash" : "Reverse Coding",
+    }));
   };
 
   const handleRegister = async (e) => {
@@ -110,12 +97,12 @@ const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await authAPI.register({
+      const response = await axiosInstance.post("/api/users/register", {
         username: userData.username,
         email: userData.email,
         password: userData.password,
         is_junior: userData.is_junior,
-        event_id: userData.event_id,
+        event_name: userData.event_name,
       });
 
         setSuccess("Registration Successful! Now You can Log In");
@@ -133,7 +120,7 @@ const RegisterPage = () => {
         // Handle specific error cases
         switch (err.response.status) {
           case 400:
-            setErrors(prev => ({ ...prev, general: err.response.data.error || "Invalid input data" }));
+            setErrors(prev => ({ ...prev, general: "Invalid input data" }));
             break;
           case 409:
             setErrors(prev => ({ ...prev, general: "Username or email already exists" }));
@@ -326,9 +313,9 @@ const RegisterPage = () => {
                   onClick={navigateToTeamRegister}
                   className="w-full py-3 px-4 bg-[#222629] hover:bg-[#2C3033] text-[#86C232] font-bold rounded-md transition-colors duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-[#86C232] focus:ring-opacity-50"
                 >
-                  REGISTER AS TEAM
-                </button>
-              </div>
+                  Create a Team
+                </a>
+              </p>
             </div>
           </div>
         </form>

@@ -49,7 +49,7 @@ const Leaderboard = () => {
     };
 
     fetchLeaderboard();
-  }, [selectedEventId, isJunior]);
+  }, [eventName, isJunior]);
 
   const handleEventChange = (e) => {
     setSelectedEventId(e.target.value);

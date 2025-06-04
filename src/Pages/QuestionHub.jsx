@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { problemAPI } from "../utils/api";
+import axiosInstance from "../utils/axios";
 import useAuthStore from "../store/authStore";
 
 const QuestionHub = () => {
@@ -10,7 +10,6 @@ const QuestionHub = () => {
   const [error, setError] = useState(null);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isLoading = useAuthStore((state) => state.isLoading);
-  const user = useAuthStore((state) => state.user);
 
   // Theme colors
   const THEME = {
@@ -37,15 +36,20 @@ const QuestionHub = () => {
     const fetchQuestions = async () => {
       console.log("Fetching questions...");
       try {
-        const response = await problemAPI.getAllProblems();
+        const response = await axiosInstance.get("/api/problems");
+        // Log the response data
         console.log("Response data:");
-        console.log(response);
+        console.log(response.data);
 
+        // Fetch stats for each problem
         const questionsWithStats = await Promise.all(
           response.data.map(async (question) => {
             try {
-              const statsResponse = await problemAPI.getProblemStats(question.id);
+              const statsResponse = await axiosInstance.get(
+                `/api/problems/stats/${question.id}`
+              );
               
+              // Merge stats with question data
               return {
                 ...question,
                 total_submissions: statsResponse.data.data.total_submissions || 0,
@@ -55,6 +59,7 @@ const QuestionHub = () => {
               };
             } catch (err) {
               console.error(`Failed to fetch stats for problem ${question.id}:`, err);
+              // Return question with default stats if stats fetch fails
               return {
                 ...question,
                 total_submissions: 0,
@@ -97,7 +102,7 @@ const QuestionHub = () => {
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[85vh] w-full bg-gray-900">
         <div className="relative">
@@ -195,7 +200,7 @@ const QuestionHub = () => {
                   {/* Footer */}
                   <div className="bg-gray-900/40 p-3 flex justify-between items-center">
                     <span className="text-xs text-gray-400">
-                      {question.score || 100} points
+                      {question.points || 100} points
                     </span>
                     <button className="text-xs bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded transition-colors duration-200">
                       Solve

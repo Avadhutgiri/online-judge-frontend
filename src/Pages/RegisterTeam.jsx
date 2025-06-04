@@ -1,40 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { teamAPI, eventAPI } from "../utils/api";
+import axios from "axios";
 
 const RegisterTeam = () => {
   const [teamData, setTeamData] = useState({
     username1: "",
     username2: "",
     team_name: "",
-    event_id: "",
+    event_name: "Reverse Coding",
     is_junior: false,
   });
-  const [events, setEvents] = useState([]);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await eventAPI.getAllEvents();
-        setEvents(response.events);
-        if (response.events.length > 0) {
-          setTeamData(prev => ({ ...prev, event_id: response.events[0].id }));
-        }
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        setError("Failed to load events. Please refresh the page.");
-      }
-    };
-    fetchEvents();
-  }, []);
-
   const handleChange = (e) => {
     setTeamData({ ...teamData, [e.target.name]: e.target.value });
+  };
+
+  const toggleEvent = () => {
+    setTeamData((prev) => ({
+      ...prev,
+      event_name: prev.event_name === "Reverse Coding" ? "Clash" : "Reverse Coding",
+    }));
   };
 
   const handleRegisterTeam = async (e) => {
@@ -44,7 +35,8 @@ const RegisterTeam = () => {
     setIsLoading(true);
 
     try {
-      await teamAPI.registerTeam(teamData);
+      await axios.post("https://onlinejudge.duckdns.org/api/users/registerTeam", teamData);
+
       setSuccess("Team registered successfully! Redirecting to login...");
       setTimeout(() => navigate("/"), 2000);
     } catch (err) {
@@ -141,27 +133,28 @@ const RegisterTeam = () => {
                   required
                 />
               </div>
-
-              {/* Event Selection */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                </div>
-                <select
-                  onChange={handleChange}
-                  value={teamData.event_id}
-                  className="w-full pl-10 pr-4 py-3 bg-[#222629] border border-gray-700 focus:border-[#86C232] text-white rounded-md outline-none transition-colors duration-300"
-                  name="event_id"
-                  required
-                >
-                  {events.map((event) => (
-                    <option key={event.id} value={event.id}>
-                      {event.name}
-                    </option>
-                  ))}
-                </select>
+            </div>
+            
+            {/* Event Toggle */}
+            <div className="pt-1 pb-1">
+              <div className="flex items-center justify-between p-3 rounded-md bg-[#222629]/60">
+                <span className={`text-base font-medium ${teamData.event_name === "Reverse Coding" ? "text-[#86C232]" : "text-gray-400"}`}>
+                  Reverse Coding
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={teamData.event_name === "Clash"} 
+                    onChange={toggleEvent} 
+                  />
+                  <div className="w-12 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full 
+                  peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white 
+                  after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#86C232]"></div>
+                </label>
+                <span className={`text-base font-medium ${teamData.event_name === "Clash" ? "text-[#86C232]" : "text-gray-400"}`}>
+                  Clash
+                </span>
               </div>
             </div>
             

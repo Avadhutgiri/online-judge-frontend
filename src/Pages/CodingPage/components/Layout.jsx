@@ -106,7 +106,7 @@ const Layout = () => {
     }
   };
   useEffect(()=> {
-    socketRef.current = io("http://localhost:5000", {
+    socketRef.current = io("https://onlinejudge.duckdns.org", {
       withCredentials: true,
     });
     socketRef.current.on("connect", () => {

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Use Vite's environment variable syntax
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://onlinejudge.duckdns.org';
-
+// const BASE_URL = 'http://localhost:5000';
 // Create axios instance with default config
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -72,6 +72,7 @@ export const problemAPI = {
 export const submissionAPI = {
   getSubmissions: (problemId) => axiosInstance.get(`/api/submissions?problem_id=${problemId}`),
   getSubmission: (id) => axiosInstance.get(`/api/submissions/${id}`),
+  getSubmissionHistory: (problemId) => axiosInstance.get(`/api/submissions/history/${problemId}`),
 };
 
 // Leaderboard API
@@ -90,9 +91,20 @@ export const leaderboardAPI = {
   },
 };
 
+export const submitAPI = {
+  runCode: (data) => axiosInstance.post('/api/submissions/run', data),
+  runSystem: (data) => axiosInstance.post('/api/submissions/runSystem', data),
+  submit: (data) => axiosInstance.post('/api/submissions/submit', data),
+}
+
 // Result API
 export const resultAPI = {
   getResult: () => axiosInstance.get('/result'),
+};
+
+// Polling API
+export const pollingAPI = {
+  getResult: (submissionId) => axiosInstance.get(`/polling/${submissionId}`),
 };
 
 export default axiosInstance; 

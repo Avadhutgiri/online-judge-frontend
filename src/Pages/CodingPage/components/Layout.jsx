@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import CodeEditorWindow from "./CodeEditorWindow";
 import OutputWindow from "./OutputWindow";
@@ -14,6 +13,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { defineTheme } from "../lib/defineTheme";
 import useKeyPress from "../hooks/useKeyPress";
 import Collapse from "@mui/material/Collapse";
+import { io } from "socket.io-client";
+import { submitAPI, submissionAPI, problemAPI, pollingAPI } from "../../../utils/api";
 
 const Layout = () => {
   const { id } = useParams();
@@ -22,6 +23,8 @@ const Layout = () => {
   const [problem, setProblem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const socketRef = useRef(null);
+
 
   // Code editing & submission states
   const [code, setCode] = useState("");
@@ -49,6 +52,7 @@ const Layout = () => {
   // Submission history state
   const [submissionHistory, setSubmissionHistory] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const submissionInProgressRef = useRef(false);
 
   // Keypress hooks for Ctrl+Enter
   const enterPress = useKeyPress("Enter");
@@ -56,10 +60,7 @@ const Layout = () => {
 
   // Fetch the problem details
   useEffect(() => {
-    axios
-      .get(`https://onlinejudge.duckdns.org/api/problems/${id}`, {
-        withCredentials: true,
-      })
+    problemAPI.getProblem(id)
       .then((response) => {
         setProblem(response.data);
         // If the problem defines a test case count, use it
@@ -98,17 +99,31 @@ const Layout = () => {
   // Fetch submission history
   const fetchSubmissionHistory = async () => {
     try {
-      const response = await axios.get(
-        `https://onlinejudge.duckdns.org/api/submissions/history/${id}`,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await submissionAPI.getSubmissionHistory(id);
       setSubmissionHistory(response.data);
     } catch (error) {
       toast.error("Error fetching submission history!");
     }
   };
+  useEffect(()=> {
+    socketRef.current = io("http://localhost:5000", {
+      withCredentials: true,
+    });
+    socketRef.current.on("connect", () => {
+      // console.log("Connected to server");
+    });
+
+    socketRef.current.on("disconnect", () => {
+      // console.log("Disconnected from serv er");
+    });
+
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
 
   const handleRunUserCode = async () => {
     setProcessing(true);
@@ -125,26 +140,39 @@ const Layout = () => {
     };
 
     try {
-      const response = await axios.post(
-        "https://onlinejudge.duckdns.org/api/submissions/run",
-        formData,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await submitAPI.runCode(formData);
 
+      
+      const submissionId = response.data.submission_id;
+      socketRef.current.emit("subscribe", submissionId);
       toast.success("Code execution started...");
+      
+      socketRef.current.once("result", (data) =>{
+        if (data.submission_id === submissionId ){
+          setOutputDetails({
+            user_output: data.user_output ||  "",
+            expected_output: data.expected_output || "",
+            message: data.message || "",
+            status: data.status || "",
+            isSubmission: false,
+          });
+          setProcessing(false);
+          toast.success("Code execution completed!");
+        }
+      })
 
-      // 🚀 Delay polling for 2 seconds to allow backend processing
+      // Add timeout fallback in case websocket doesn't respond
       setTimeout(() => {
-        pollForResult(
-          response.data.submission_id,
-          setOutputDetails,
-          setProcessing,
-          "Code Execution Completed!",
-          false
-        );
-      }, 2000);
+        if (processing) {
+          pollForResult(
+            response.data.submission_id,
+            setOutputDetails,
+            setProcessing,
+            "Code Execution Completed!",
+            false
+          );
+        }
+      }, 30000); // 30 second timeout
     } catch (error) {
       toast.error(error.response?.data?.message || "Error running code!");
       setProcessing(false);
@@ -153,6 +181,7 @@ const Layout = () => {
 
   const handleSubmitCode = async () => {
     setSubmitting(true);
+    submissionInProgressRef.current = true;
     // Clear any previous output details
     setOutputDetails(null);
     // Reset test case animations
@@ -166,33 +195,70 @@ const Layout = () => {
     };
 
     try {
-      const response = await axios.post(
-        "https://onlinejudge.duckdns.org/api/submissions/submit",
-        submissionData,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await submitAPI.submit(submissionData);
 
+      const submissionId = response.data.submission_id;
+      socketRef.current.emit("subscribe", submissionId);
       toast.success("Solution submitted successfully!");
 
+      socketRef.current.on("result", (data) =>{
+        if (data.submission_id === submissionId && data.type === "submit") {
+          const result = {
+            status: data.status || "",
+            message: data.message || "",
+            failed_test_case: data.failed_test_case || null,
+            isSubmission: true,
+          }
+          setSubmissionResult(result);
+
+          if (data.status === "Accepted") {
+            animateTestCaseResults(Array(testCaseCount).fill("Accepted"));
+          } else if (data.failed_test_case) {
+            const failedIndex = parseInt(data.failed_test_case.match(/\d+/)?.[0], 10);
+            const simulatedResults = Array.from(
+              { length: testCaseCount },
+              (_, idx) =>
+                idx + 1 < failedIndex
+                  ? "Accepted"
+                  : idx + 1 === failedIndex
+                  ? "Wrong Answer"
+                  : null
+            );
+            animateTestCaseResults(simulatedResults);
+          } else {
+            setAnimationComplete(true);
+          }
+          setSubmitting(false);
+          submissionInProgressRef.current = false;
+          toast.success("Submission completed!");
+        }
+      });
+
+      // Add timeout fallback in case websocket doesn't respond
       setTimeout(() => {
-        pollForResult(
-          response.data.submission_id,
-          setSubmissionResult,
-          setSubmitting,
-          "Submission Completed!",
-          true
-        );
-      }, 2000);
+        if (submissionInProgressRef.current) {
+          pollForResult(
+            response.data.submission_id,
+            setSubmissionResult,
+            setSubmitting,
+            "Submission Completed!",
+            true
+          );
+        } else {
+        }
+      }, 10000); // 10 second timeout
     } catch (error) {
       toast.error("Error submitting solution!");
       setSubmitting(false);
+      submissionInProgressRef.current = false;
     }
   };
 
   const handleSystemRun = async () => {
-    setTestProcessing(true);
+    setTestProcessing(true);;
+    setTestCaseResults([]);
+    setAnimationComplete(false);
+    setSubmissionResult(null)
 
     const formData = {
       problem_id: id,
@@ -200,25 +266,37 @@ const Layout = () => {
     };
 
     try {
-      const response = await axios.post(
-        "https://onlinejudge.duckdns.org/api/submissions/runSystem",
-        formData,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await submitAPI.runSystem(formData);
+      const submissionId = response.data.submission_id;
 
+      socketRef.current.emit("subscribe", submissionId);
       toast.success("System test execution started...");
+      
+      socketRef.current.once("result", (data) => {
+        if (data.submission_id === submissionId && data.type === "system"){
+        setTestOutput({
+          expected_output: data.expected_output || "",
+          message: data.message || "",
+          status: data.status || "",
+          isSubmission: false,
+        })
+        setTestProcessing(false);
+        toast.success("System test completed!");
+      }
+      })
 
+      // Add timeout fallback in case websocket doesn't respond
       setTimeout(() => {
-        pollForResult(
-          response.data.submission_id,
-          setTestOutput,
-          setTestProcessing,
-          "System Test Completed!",
-          false
-        );
-      }, 2000);
+        if (testProcessing) {
+          pollForResult(
+            response.data.submission_id,
+            setTestOutput,
+            setTestProcessing,
+            "System Test Completed!",
+            false
+          );
+        }
+      }, 30000); // 30 second timeout
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Error running system test!"
@@ -236,12 +314,7 @@ const Layout = () => {
     attempts = 5
   ) => {
     try {
-      let response = await axios.get(
-        `https://onlinejudge.duckdns.org/polling/${submission_id}`,
-        {
-          withCredentials: true,
-        }
-      );
+      let response = await pollingAPI.getResult(submission_id);
 
       if (response.data.status === "Pending") {
         // Keep polling until we get a final result
@@ -263,7 +336,7 @@ const Layout = () => {
             status: response.data.status || "",
             message: response.data.message || "",
             failed_test_case: response.data.failed_test_case || null,
-            test_case_results: response.data.test_case_results || [],
+            // test_case_results: response.data.test_case_results || [],
             isSubmission: true,
           };
 
@@ -333,7 +406,6 @@ const Layout = () => {
           2000
         );
       } else {
-        console.error("Polling error:", err.response);
         toast.error("Error fetching result!");
         setProcessingState(false);
         setAnimationComplete(true);

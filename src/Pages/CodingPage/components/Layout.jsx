@@ -107,8 +107,12 @@ const Layout = () => {
   };
   useEffect(()=> {
     socketRef.current = io("https://onlinejudge.duckdns.org", {
+      path: "/socket.io",
+      transports: ["websocket"],
+      secure: true,
       withCredentials: true,
     });
+    
     socketRef.current.on("connect", () => {
       // console.log("Connected to server");
     });

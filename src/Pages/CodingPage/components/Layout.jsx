@@ -105,29 +105,30 @@ const Layout = () => {
       toast.error("Error fetching submission history!");
     }
   };
-  useEffect(()=> {
+  useEffect(() => {
     socketRef.current = io("https://onlinejudge.duckdns.org", {
       path: "/socket.io",
       transports: ["websocket"],
-      secure: true,
       withCredentials: true,
     });
-    
+  
     socketRef.current.on("connect", () => {
-      // console.log("Connected to server");
+      console.log("🔥 Socket connected:", socketRef.current.id);
     });
-
+  
     socketRef.current.on("disconnect", () => {
-      // console.log("Disconnected from serv er");
+      console.warn("💔 Socket disconnected");
     });
-
-
+  
+    socketRef.current.on("connect_error", (err) => {
+      console.error("🚨 Socket.IO connection error:", err.message);
+    });
+  
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      socketRef.current?.disconnect();
     };
   }, []);
+  
 
   const handleRunUserCode = async () => {
     setProcessing(true);

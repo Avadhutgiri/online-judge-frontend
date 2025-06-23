@@ -73,7 +73,7 @@ const useCodingLogic = () => {
 
   // Socket connection setup
   useEffect(() => {
-    socketRef.current = io("http://localhost:5000", {
+    socketRef.current = io("https://onlinejudge.duckdns.org", {
       path: "/socket.io",
       withCredentials: true,
     });

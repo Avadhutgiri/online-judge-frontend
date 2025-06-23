@@ -14,7 +14,7 @@ const CodeEditorWindow = ({ onChange, language, code, theme }) => {
     };
 
     return (
-        <div className="font-mono rounded-md overflow-hidden shadow-lg h-[63vh] w-full">
+        <div className="font-mono rounded-md overflow-hidden shadow-lg h-full w-full">
             <Editor
                 height="100%"
                 width="100%"
@@ -23,6 +23,32 @@ const CodeEditorWindow = ({ onChange, language, code, theme }) => {
                 theme={theme}
                 defaultValue="// some comment"
                 onChange={handleEditorChange}
+                options={{
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    wordWrap: "on",
+                    fontSize: 14,
+                    lineNumbers: "on",
+                    roundedSelection: false,
+                    scrollbar: {
+                        vertical: "visible",
+                        horizontal: "visible",
+                        verticalScrollbarSize: 10,
+                        horizontalScrollbarSize: 10,
+                    },
+                    folding: true,
+                    lineDecorationsWidth: 10,
+                    lineNumbersMinChars: 3,
+                    renderLineHighlight: "all",
+                    selectOnLineNumbers: true,
+                    automaticLayout: true,
+                    scrollBeyondLastLine: false,
+                    readOnly: false,
+                    cursorStyle: "line",
+                    automaticLayout: true,
+                    theme: theme,
+                }}
             />
         </div>
     );

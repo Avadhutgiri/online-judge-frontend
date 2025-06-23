@@ -2,7 +2,8 @@ import axios from 'axios';
 import useAuthStore from '../store/authStore';
 
 const axiosInstance = axios.create({
-    baseURL: 'https://onlinejudge.duckdns.org',
+    baseURL: import.meta.env.VITE_API_URL || 'https://onlinejudge.duckdns.org',
+    // baseURL: 'http://localhost:5000',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',

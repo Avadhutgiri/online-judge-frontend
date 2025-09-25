@@ -49,9 +49,11 @@ const LoginPage = () => {
 
     try {
       const response = await authAPI.login(logData);
-      login(response.user);
+      console.log('Login response:', response); // Debug log
+      login(response.data.user);
       navigate("/questionHub");
     } catch (err) {
+      console.error('Login error:', err); // Debug log
       setError(err.response?.data?.error || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);

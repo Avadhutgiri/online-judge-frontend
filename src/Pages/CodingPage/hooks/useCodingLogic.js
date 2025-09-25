@@ -5,6 +5,7 @@ import { submitAPI, submissionAPI, problemAPI, pollingAPI } from "../../../utils
 import { toast } from "react-toastify";
 import { languageOptions } from "../constants/languageOptions";
 
+const BASE_URL = 'https://toylike-nicolette-unsensualistic.ngrok-free.dev';
 const useCodingLogic = () => {
   const { id } = useParams();
   const socketRef = useRef(null);
@@ -73,7 +74,7 @@ const useCodingLogic = () => {
 
   // Socket connection setup
   useEffect(() => {
-    socketRef.current = io("http://localhost:5000", {
+    socketRef.current = io(BASE_URL, {
       path: "/socket.io",
       withCredentials: true,
     });

@@ -126,11 +126,11 @@ const QuestionHub = () => {
   }
 
   return (
-    <div className="bg-gray-900 min-h-[85vh] p-6 w-full">
+    <div className="bg-[#121417] min-h-[85vh] p-6 w-full">
       {/* Header with green underline */}
       <div className="text-center mb-12">
         <h1 className="text-3xl md:text-4xl font-bold text-white">Question Hub</h1>
-        <div className="h-1 w-24 bg-green-500 mx-auto mt-3"></div>
+        <div className="h-1 w-24 bg-[#86C232] mx-auto mt-3"></div>
         <p className="text-gray-400 mt-4">Select a problem to start coding</p>
       </div>
 
@@ -148,19 +148,19 @@ const QuestionHub = () => {
                 <div
                   key={question.id}
                   onClick={() => handleQuestionClick(question.id)}
-                  className="bg-black rounded-lg overflow-hidden shadow-lg hover:shadow-green-900/20 hover:translate-y-1 transition-all duration-300 cursor-pointer border border-gray-700"
+                  className="bg-[#86C232] rounded-lg overflow-hidden shadow-lg hover:shadow-green-900/20 hover:translate-y-1 transition-all duration-300 cursor-pointer border border-gray-700"
                   >
                   <div className="p-6">
                     {/* Question title and difficulty badge */}
                     <div className="flex justify-between items-start mb-4">
-                      <h2 className="text-xl font-semibold text-white">{question.title}</h2>
-                      <span className={`text-xs font-medium py-1 px-2 rounded-full text-white ${difficultyColor}`}>
+                      <h2 className="text-xl font-semibold ">{question.title}</h2>
+                      {/* <span className={`text-xs font-medium py-1 px-2 rounded-full text-white ${difficultyColor}`}>
                         {difficulty}
-                      </span>
+                      </span> */}
                     </div>
                     
                     {/* Question details */}
-                    <p className="text-gray-400 text-sm mb-6 line-clamp-2">
+                    <p className=" text-sm mb-6 line-clamp-2">
                       {question.description || "Solve this coding challenge to test your skills."}
                     </p>
                     
@@ -169,12 +169,12 @@ const QuestionHub = () => {
                       {/* Accuracy bar */}
                       <div>
                         <div className="flex justify-between items-center mb-1 text-xs">
-                          <span className="text-gray-400">Accuracy</span>
-                          <span className="text-green-400">{question.success_rate}</span>
+                          <span className="">Accuracy</span>
+                          <span className="">{question.success_rate}</span>
                         </div>
-                        <div className="h-2 w-full bg-gray-700 rounded-full overflow-hidden">
+                        <div className="h-2 w-full bg-[#121417] rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-green-500 rounded-full"
+                            className="h-full bg-white rounded-full"
                             style={{ width: `${accuracyPercentage}%` }}
                           ></div>
                         </div>
@@ -182,22 +182,22 @@ const QuestionHub = () => {
                       
                       {/* Submissions count */}
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-400">Submissions</span>
+                        <span className="">Submissions</span>
                         <div className="flex items-center">
-                          <span className="text-green-400 mr-1">{question.correct_submissions}</span>
-                          <span className="text-gray-500">/</span>
-                          <span className="text-gray-400 ml-1">{question.total_submissions}</span>
+                          <span className="text mr-1">{question.correct_submissions}</span>
+                          <span className="">/</span>
+                          <span className="text ml-1">{question.total_submissions}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   {/* Footer */}
-                  <div className="bg-gray-900/40 p-3 flex justify-between items-center">
-                    <span className="text-xs text-gray-400">
+                  <div className="bg-gray-900/60 p-3 flex justify-between items-center">
+                    <span className="text-xs text-white">
                       {question.score || 100} points
                     </span>
-                    <button className="text-xs bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded transition-colors duration-200">
+                    <button className="text-xs bg-[#121417] hover:bg-green-700 text-white py-1 px-3 rounded transition-colors duration-200">
                       Solve
                     </button>
                   </div>

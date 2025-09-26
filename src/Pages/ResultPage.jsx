@@ -7,7 +7,7 @@ import { resultAPI } from '../utils/api';
 // Custom Result Card component with improved styling
 const ResultCard = ({ fieldName, fieldValue }) => {
   return (
-    <div className="bg-black rounded-lg p-6 shadow-lg border-l-4 border-green-500 hover:shadow-green-900/30 hover:translate-y-1 transition-all duration-300 w-full">
+    <div className="bg-black rounded-lg p-6 shadow-lg border-l-4 border-[#86C232] hover:shadow-green-900/30 hover:translate-y-1 transition-all duration-300 w-full">
       <h3 className="text-gray-400 font-mono text-sm uppercase tracking-wide mb-1">{fieldName}</h3>
       <div className="text-3xl font-bold text-white">{fieldValue}</div>
     </div>
@@ -60,22 +60,22 @@ const ResultPage = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-900">
+      <div className="flex flex-col items-center justify-center h-screen bg-[#121417]">
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-black border-t-green-500 rounded-full animate-spin"></div>
+          <div className="w-16 h-16 border-4 border-black border-t-[#86C232] rounded-full animate-spin"></div>
           <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-l-green-300 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
         </div>
-        <p className="mt-6 text-green-500 font-mono tracking-widest text-sm">LOADING RESULTS</p>
+        <p className="mt-6 text-[#86C232] font-mono tracking-widest text-sm">LOADING RESULTS</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-900 p-4">
+      <div className="flex flex-col items-center justify-center h-screen bg-[#121417] p-4">
         <div className="bg-black p-8 rounded-lg shadow-lg border-l-4 border-red-500 max-w-md w-full">
           <div className="flex items-center justify-center mb-6">
-            <div className="bg-gray-900 p-3 rounded-full">
+            <div className="bg-[#121417] p-3 rounded-full">
               <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
@@ -104,24 +104,24 @@ const ResultPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 py-8">
+    <div className="min-h-screen bg-[#121417] text-gray-200 py-8">
       {/* Hexagon-inspired header with gradient background */}
       <div className="relative mb-12 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-black to-gray-900"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#121417] via-black to-[#121417]"></div>
         <div className="absolute top-0 left-0 w-full h-full opacity-10">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-green-500 rotate-45 transform-gpu"></div>
-          <div className="absolute top-1/3 right-1/4 w-32 h-32 bg-green-500 rotate-12 transform-gpu"></div>
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#86C232] rotate-45 transform-gpu"></div>
+          <div className="absolute top-1/3 right-1/4 w-32 h-32 bg-[#86C232] rotate-12 transform-gpu"></div>
           <div className="absolute bottom-1/4 left-1/3 w-48 h-48 bg-green-700 -rotate-12 transform-gpu"></div>
         </div>
         
         <div className="relative pt-16 pb-12 text-center px-4">
           <div className="inline-block mb-4 px-3 py-1 bg-black bg-opacity-50 rounded-full">
-            <span className="text-sm text-green-400 font-mono tracking-widest">COMPETITION RESULTS</span>
+            <span className="text-sm text- font-mono tracking-widest">COMPETITION RESULTS</span>
           </div>
-          <h1 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-green-600">
-            {eventName} RESULTS
+          <h1 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-[#86C232]">
+            {eventName} Results
           </h1>
-          <div className="h-1 w-24 bg-green-500 mx-auto my-4"></div>
+          <div className="h-1 w-24 bg-[#86C232] mx-auto my-4"></div>
           <p className="text-gray-400 font-medium">
             {category}
           </p>
@@ -141,7 +141,7 @@ const ResultPage = () => {
                 />
               </div>
               <h2 className="text-3xl font-bold text-white mb-4 text-center">{result.team_name}</h2>
-              <div className="bg-green-600 py-2 px-6 rounded-full text-white font-medium">
+              <div className="bg-[#86C232] py-2 px-6 rounded-full text-white font-medium">
                 {result.is_junior ? "Junior Division" : "Senior Division"}
               </div>
             </div>
@@ -154,7 +154,7 @@ const ResultPage = () => {
                   <span className="text-2xl font-bold text-white">{result.rank}</span>
                 </div>
                 <div className="h-1 w-full bg-gray-700">
-                  <div className="h-full bg-green-500" style={{ width: `${100 - Math.min(result.rank/10 * 100, 100)}%` }}></div>
+                  <div className="h-full bg-[#86C232]" style={{ width: `${100 - Math.min(result.rank/10 * 100, 100)}%` }}></div>
                 </div>
                 
                 <div className="flex justify-between items-center mt-6">
@@ -162,7 +162,7 @@ const ResultPage = () => {
                   <span className="text-2xl font-bold text-white">{result.total_score}</span>
                 </div>
                 <div className="h-1 w-full bg-gray-700">
-                  <div className="h-full bg-green-500" style={{ width: `${Math.min(result.total_score, 100)}%` }}></div>
+                  <div className="h-full bg-[#86C232]" style={{ width: `${Math.min(result.total_score, 100)}%` }}></div>
                 </div>
                 
                 <div className="flex justify-between items-center mt-6">
@@ -170,7 +170,7 @@ const ResultPage = () => {
                   <span className="text-2xl font-bold text-white">{result.accuracy}%</span>
                 </div>
                 <div className="h-1 w-full bg-gray-700">
-                  <div className="h-full bg-green-500" style={{ width: `${result.accuracy}%` }}></div>
+                  <div className="h-full bg-[#86C232]" style={{ width: `${result.accuracy}%` }}></div>
                 </div>
               </div>
             </div>
@@ -192,11 +192,11 @@ const ResultPage = () => {
             <div className="flex flex-col md:flex-row gap-6">
               <div className="flex-1">
                 <div className="flex items-end gap-4 mb-2">
-                  <div className="text-4xl font-bold text-green-500">{result.correct_submission}</div>
+                  <div className="text-4xl font-bold text-[#86C232]">{result.correct_submission}</div>
                   <div className="text-gray-400 pb-1">Correct</div>
                 </div>
                 <div className="h-2 w-full bg-gray-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 rounded-full" style={{ 
+                  <div className="h-full bg-[#86C232] rounded-full" style={{ 
                     width: `${result.correct_submission / (result.correct_submission + result.wrong_submission) * 100}%` 
                   }}></div>
                 </div>

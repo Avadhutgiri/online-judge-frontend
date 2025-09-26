@@ -5,8 +5,8 @@ import { submitAPI, submissionAPI, problemAPI, pollingAPI } from "../../../utils
 import { toast } from "react-toastify";
 import { languageOptions } from "../constants/languageOptions";
 
-const BASE_URL = 'https://onlinejudge.duckdns.org';
-// const BASE_URL = 'https://toylike-nicolette-unsensualistic.ngrok-free.dev';
+// const BASE_URL = 'https://onlinejudge.duckdns.org';
+const BASE_URL = 'http://localhost:5000';
 const useCodingLogic = () => {
   const { id } = useParams();
   const socketRef = useRef(null);

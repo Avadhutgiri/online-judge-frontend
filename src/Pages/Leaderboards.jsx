@@ -82,7 +82,7 @@ const Leaderboard = () => {
 
   if (loading && !leaderboardData) {
   return (
-      <div className="flex flex-col items-center justify-center h-[85vh] w-full bg-gray-900">
+      <div className="flex flex-col items-center justify-center h-[85vh] w-full bg-[#121417]">
         <div className="relative mb-8">
           <div className="w-16 h-16 border-4 border-gray-800 border-t-green-500 rounded-full animate-spin"></div>
           <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-green-400 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
@@ -101,7 +101,7 @@ const Leaderboard = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[85vh] w-full bg-gray-900 p-4">
+      <div className="flex flex-col items-center justify-center h-[85vh] w-full bg-[#121417] p-4">
         <div className="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700 max-w-md w-full transform hover:scale-105 transition-transform duration-300">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -124,27 +124,27 @@ const Leaderboard = () => {
   }
 
   return (
-    <div className="min-h-[85vh] w-full bg-gray-900 p-6">
+    <div className="min-h-[85vh] w-full bg-[#121417] p-6">
       <div className="max-w-7xl mx-auto">
         {/* Enhanced Header */}
         <div className="text-center mb-10">
           <div className="flex justify-center items-center mb-4">
-            <Trophy className="w-10 h-10 text-green-500 mr-3" />
+            <Trophy className="w-10 h-10 text-[#86C232] mr-3" />
             <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               Leaderboard
             </h1>
         </div>
-          <div className="h-1 w-32 bg-gradient-to-r from-green-500 to-green-400 mx-auto rounded-full"></div>
+          <div className="h-1 w-32 bg-[#86C232] mx-auto rounded-full"></div>
           {leaderboardData && (
-            <div className="mt-6 bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 inline-block border border-gray-700">
+            <div className="mt-6 backdrop-blur-sm rounded-xl p-4 inline-block border border-gray-700">
               <div className="flex items-center justify-center space-x-4 text-sm">
                 <div className="flex items-center">
-                  <Calendar className="w-4 h-4 text-green-500 mr-2" />
+                  <Calendar className="w-4 h-4 text-[#86C232] mr-2" />
                   <span className="text-white font-medium">{leaderboardData.event_name}</span>
                 </div>
                 <div className="w-px h-4 bg-gray-600"></div>
                 <div className="flex items-center">
-                  <Users className="w-4 h-4 text-green-500 mr-2" />
+                  <Users className="w-4 h-4 text-[#86C232] mr-2" />
                   <span className="text-gray-300">{isJunior ? "Junior" : "Senior"} Division</span>
           </div>
               </div>
@@ -159,7 +159,7 @@ const Leaderboard = () => {
             <select
               value={selectedEventId}
               onChange={handleEventChange}
-              className="w-full bg-gray-800 text-white pl-10 pr-4 py-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none cursor-pointer hover:bg-gray-750 transition-colors duration-200"
+              className="w-full bg-[#292929] text-white pl-10 pr-4 py-3 rounded-xl  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none cursor-pointer hover:bg-gray-750 transition-colors duration-200"
             >
               {events.map((event) => (
                 <option key={event.id} value={event.id}>
@@ -174,7 +174,7 @@ const Leaderboard = () => {
             <select
               value={isJunior ? "junior" : "senior"}
               onChange={handleCategoryChange}
-              className="w-full bg-gray-800 text-white pl-10 pr-4 py-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none cursor-pointer hover:bg-gray-750 transition-colors duration-200"
+              className="w-full bg-[#292929] text-white pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none cursor-pointer hover:bg-gray-750 transition-colors duration-200"
             >
               <option value="senior">Senior Division</option>
               <option value="junior">Junior Division</option>
@@ -184,40 +184,39 @@ const Leaderboard = () => {
 
         {/* Enhanced Leaderboard Table */}
         {leaderboardData && (
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
+          <div className="bg-[#1e1e1e] backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-[#292929]">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gradient-to-r from-gray-800 to-gray-700">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">
+                  <tr className="bg-[#86C232]">
+                    <th className="px-6 py-4 text-center text-sm font-semibold text- uppercase tracking-wider">
                       <div className="flex items-center">
-                        <Trophy className="w-4 h-4 mr-2 text-green-500" />
                         Rank
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">
                       <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-2 text-green-500" />
+                        {/* <Users className="w-4 h-4 mr-2 text-green-500" /> */}
                         Team
                       </div>
                     </th>
                     {leaderboardData.problems?.map((problem, index) => (
-                      <th key={problem.id} className="px-6 py-4 text-center text-sm font-semibold text-gray-200 uppercase tracking-wider">
+                      <th key={problem.id} className="px-6 py-4 text-center text-sm font-semibold  uppercase tracking-wider">
                         <div className="flex flex-col items-center">
-                          <Target className="w-4 h-4 mb-1 text-green-500" />
+                          {/* <Target className="w-4 h-4 mb-1 text-green-500" /> */}
                           <span className="truncate max-w-24">{problem.title}</span>
                         </div>
                       </th>
                     ))}
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-200 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">
                       <div className="flex flex-col items-center">
-                        <Award className="w-4 h-4 mb-1 text-green-500" />
+                        {/* <Award className="w-4 h-4 mb-1 text-green-500" /> */}
                         Total
                       </div>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-700">
+                <tbody className="divide-y divide-[#292929]">
                   {leaderboardData.users?.map((team, index) => (
                     <tr 
                       key={team.teamname} 

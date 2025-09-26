@@ -46,12 +46,12 @@ const Navbar = () => {
         <>
             <div className="navbar h-[10vh] w-full md:w-[80%] mx-auto bg-[#292929] rounded-[40px] flex justify-between items-center z-[1000] px-6 shadow-lg">
                 <div className="nav-left h-full flex items-center">
-                    <Link to="/" className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2">
                         <div className="h-12 w-12 bg-[#86C232] rounded-full flex justify-center items-center">
                             <h1 className="text-[#191919] text-[22px] font-bold">RC</h1>
                         </div>
                         <span className="hidden md:block text-white text-xl font-bold">CodeChallenge</span>
-                    </Link>
+                    </div>
                 </div>
 
                 {/* Hamburger menu for smaller screens */}

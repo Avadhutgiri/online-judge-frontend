@@ -1,25 +1,6 @@
-import axios from 'axios';
+import axiosInstance from './axios';
 
-// Use Vite's environment variable syntax
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://onlinejudge.duckdns.org';
-// const BASE_URL = 'https://toylike-nicolette-unsensualistic.ngrok-free.dev';
-// Create axios instance with default config
-const axiosInstance = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-  
-// Add response interceptor for error handling
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('API Error:', error);
-    return Promise.reject(error);
-  }
-);
+// Use the shared axios instance that has proper configuration
 
 // Auth API
 export const authAPI = {
@@ -33,8 +14,6 @@ export const authAPI = {
 export const eventAPI = {
   getAllEvents: async () => {
     try {
-      const url = `${BASE_URL}/api/users/events`;
-      console.log('Fetching events from:', url);
       const response = await axiosInstance.get('/api/users/events');
       console.log('Events API response:', response);
       return response.data;
@@ -79,8 +58,6 @@ export const submissionAPI = {
 export const leaderboardAPI = {
   getLeaderboard: async (eventId, isJunior) => {
     try {
-      const url = `${BASE_URL}/api/leaderboard?event_id=${eventId}&is_junior=${isJunior}`;
-      console.log('Fetching leaderboard from:', url);
       const response = await axiosInstance.get(`/api/leaderboard?event_id=${eventId}&is_junior=${isJunior}`);
       console.log('Raw leaderboard response:', response);
       return response;

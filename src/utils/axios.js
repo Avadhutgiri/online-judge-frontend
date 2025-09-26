@@ -15,6 +15,11 @@ axiosInstance.interceptors.request.use(
     (config) => {
         // Ensure credentials are included in every request
         config.withCredentials = true;
+        // Ensure cookies are sent with every request
+        config.headers = {
+            ...config.headers,
+            'Content-Type': 'application/json',
+        };
         return config;
     },
     (error) => {

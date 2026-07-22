@@ -42,11 +42,8 @@ const CodeEditorWindow = ({ onChange, language, code, theme }) => {
                     lineNumbersMinChars: 3,
                     renderLineHighlight: "all",
                     selectOnLineNumbers: true,
-                    automaticLayout: true,
-                    scrollBeyondLastLine: false,
                     readOnly: false,
                     cursorStyle: "line",
-                    automaticLayout: true,
                     theme: theme,
                 }}
             />

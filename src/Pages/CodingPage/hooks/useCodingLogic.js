@@ -6,7 +6,8 @@ import { toast } from "react-toastify";
 import { languageOptions } from "../constants/languageOptions";
 
 // const BASE_URL = 'https://onlinejudge.duckdns.org';
-const BASE_URL = 'http://localhost:5000';
+// const BASE_URL = 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_URL;
 const useCodingLogic = () => {
   const { id } = useParams();
   const socketRef = useRef(null);
@@ -73,7 +74,6 @@ const useCodingLogic = () => {
     }
   }, [activeTab]);
 
-  // Socket connection setup
   useEffect(() => {
     socketRef.current = io(BASE_URL, {
       path: "/socket.io",
@@ -140,18 +140,7 @@ const useCodingLogic = () => {
         }
       });
 
-      // Add timeout fallback
-      setTimeout(() => {
-        if (processing) {
-          pollForResult(
-            response.data.submission_id,
-            setOutputDetails,
-            setProcessing,
-            "Code Execution Completed!",
-            false
-          );
-        }
-      }, 30000);
+      
     } catch (error) {
       toast.error(error.response?.data?.message || "Error running code!");
       setProcessing(false);
@@ -210,18 +199,6 @@ const useCodingLogic = () => {
         }
       });
 
-      // Add timeout fallback
-      setTimeout(() => {
-        if (submissionInProgressRef.current) {
-          pollForResult(
-            response.data.submission_id,
-            setSubmissionResult,
-            setSubmitting,
-            "Submission Completed!",
-            true
-          );
-        }
-      }, 10000);
     } catch (error) {
       toast.error("Error submitting solution!");
       setSubmitting(false);
@@ -260,18 +237,6 @@ const useCodingLogic = () => {
         }
       });
 
-      // Add timeout fallback
-      setTimeout(() => {
-        if (testProcessing) {
-          pollForResult(
-            response.data.submission_id,
-            setTestOutput,
-            setTestProcessing,
-            "System Test Completed!",
-            false
-          );
-        }
-      }, 30000);
     } catch (error) {
       toast.error(error.response?.data?.message || "Error running system test!");
       setTestProcessing(false);

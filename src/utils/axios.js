@@ -2,8 +2,7 @@ import axios from 'axios';
 import useAuthStore from '../store/authStore';
 
 const axiosInstance = axios.create({
-    // baseURL: import.meta.env.VITE_API_URL || 'https://onlinejudge.duckdns.org',
-    baseURL: 'http://localhost:5000',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
@@ -13,9 +12,7 @@ const axiosInstance = axios.create({
 // Add a request interceptor
 axiosInstance.interceptors.request.use(
     (config) => {
-        // Ensure credentials are included in every request
         config.withCredentials = true;
-        // Ensure cookies are sent with every request
         config.headers = {
             ...config.headers,
             'Content-Type': 'application/json',

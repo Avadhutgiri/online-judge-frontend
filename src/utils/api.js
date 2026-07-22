@@ -1,6 +1,5 @@
 import axiosInstance from './axios';
 
-// Use the shared axios instance that has proper configuration
 
 // Auth API
 export const authAPI = {
